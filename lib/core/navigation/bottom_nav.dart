@@ -1,5 +1,6 @@
 // lib/core/navigation/bottom_nav.dart
 import 'package:flutter/material.dart';
+import 'package:amiflow/core/theme/app_colors.dart';
 import 'nav_item.dart';
 
 class BottomNav extends StatelessWidget {
@@ -8,47 +9,40 @@ class BottomNav extends StatelessWidget {
 
   const BottomNav({super.key, required this.currentIndex, required this.onTap});
 
-  static const _barColor = Color(0xFF1C1C1E);          // pill gelap
-  static const _activeColor = Color.fromARGB(255, 0, 128, 255); // biru app
-  static const _inactiveColor = Color(0xFF8E8E93);     // abu-abu
-
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Padding(
-        // jarak pill dari tepi layar — ini yang bikin "mengambang"
-        padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+        padding: const EdgeInsets.fromLTRB(40, 0, 40, 20),
         child: Container(
           height: 60,
           decoration: BoxDecoration(
-            color: _barColor,
-            borderRadius: BorderRadius.circular(30), // setengah tinggi = pill penuh
-            boxShadow: const [
-              BoxShadow(color: Colors.black26, blurRadius: 16, offset: Offset(0, 6)),
-            ],
+            color: AppColors.surface,                    // senada kartu dashboard
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(color: Colors.white10),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               NavItem(
-                icon: Icons.home,
+                icon: Icons.grid_view,                   // Dashboard
                 isActive: currentIndex == 0,
-                activeColor: _activeColor,
-                inactiveColor: _inactiveColor,
+                activeColor: AppColors.accent,
+                inactiveColor: Colors.white70,
                 onTap: () => onTap(0),
               ),
               NavItem(
-                icon: Icons.search,
+                icon: Icons.delete_sweep,                // Manage
                 isActive: currentIndex == 1,
-                activeColor: _activeColor,
-                inactiveColor: _inactiveColor,
+                activeColor: AppColors.accent,
+                inactiveColor: Colors.white70,
                 onTap: () => onTap(1),
               ),
               NavItem(
-                icon: Icons.person,
+                icon: Icons.account_circle,              // Profile
                 isActive: currentIndex == 2,
-                activeColor: _activeColor,
-                inactiveColor: _inactiveColor,
+                activeColor: AppColors.accent,
+                inactiveColor: Colors.white70,
                 onTap: () => onTap(2),
               ),
             ],

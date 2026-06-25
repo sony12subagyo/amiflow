@@ -1,9 +1,10 @@
-import 'package:amiflow/core/navigation/bottom_nav.dart';
-import 'package:amiflow/shared/widgets/background_wrapper.dart';
+// lib/core/navigation/main_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:amiflow/core/theme/app_colors.dart';
 import 'navigation_cubit.dart';
 import 'app_pages.dart';
+import 'bottom_nav.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -13,11 +14,7 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  // PageController murni urusan animasi UI, jadi tetap di sini (bukan di Cubit)
   late final PageController _pageController;
-
-  static const _titles = ['Home', 'Pencarian', 'Profil'];
-  static const _appBarColor = Color.fromARGB(255, 0, 128, 255);
 
   @override
   void initState() {
@@ -47,31 +44,17 @@ class _MainScreenState extends State<MainScreen> {
         builder: (context, currentIndex) {
           return Scaffold(
             extendBody: true,
-            backgroundColor: Colors.transparent,
-            appBar: AppBar(
-              elevation: 0,
-              backgroundColor: _appBarColor,
-              title: Text(
-                _titles[currentIndex],
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            body: BackgroundWrapper(
-              child: PageView(
-                controller: _pageController,
-                physics: const NeverScrollableScrollPhysics(),
-                onPageChanged: (index) =>
-                    context.read<NavigationCubit>().selectTab(index),
-                children: AppPages.pages,
-              ),
+            backgroundColor: AppColors.background, // latar gelap app
+            body: PageView(
+              controller: _pageController,
+              physics: const NeverScrollableScrollPhysics(),
+              onPageChanged: (index) =>
+                  context.read<NavigationCubit>().selectTab(index),
+              children: AppPages.pages,
             ),
             bottomNavigationBar: BottomNav(
               currentIndex: currentIndex,
-              onTap: (index) => _onNavTap(index),
+              onTap: _onNavTap,
             ),
           );
         },
