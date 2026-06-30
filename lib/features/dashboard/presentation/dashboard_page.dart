@@ -33,8 +33,12 @@ class DashboardPage extends StatelessWidget {
                   itemBuilder: (context, index) {
                     if (index == dummyNodes.length) {
                       return AddNodeCard(
-                        onTap: () {
-                          /* TODO: aksi tambah node */
+                       onTap: () {
+                          showDialog(
+                            context: context,
+                            barrierDismissible: true,
+                            builder: (_) => const AddNodeDialog(),
+                          );
                         },
                       );
                     }
