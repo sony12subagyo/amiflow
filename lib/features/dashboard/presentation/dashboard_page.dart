@@ -1,13 +1,22 @@
 // lib/features/dashboard/presentation/dashboard_page.dart
 import 'package:amiflow/core/theme/app_colors.dart';
 import 'package:amiflow/features/dashboard/data/dummy_nodes.dart';
+import 'package:amiflow/features/dashboard/presentation/add_node_dialog.dart';
 import 'package:amiflow/features/dashboard/presentation/node_detail_page.dart';
 import 'package:amiflow/features/dashboard/presentation/widgets/add_node_card.dart';
 import 'package:amiflow/features/dashboard/presentation/widgets/node_card.dart';
+import 'package:amiflow/features/gateway/domain/entities/gateway.dart';
 import 'package:flutter/material.dart';
 
 class DashboardPage extends StatelessWidget {
-  const DashboardPage({super.key});
+  final Gateway gateway;
+  final VoidCallback onChangeGateway;
+
+  const DashboardPage({
+    super.key,
+    required this.gateway,
+    required this.onChangeGateway,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +26,7 @@ class DashboardPage extends StatelessWidget {
         child: Column(
           children: [
             _buildHeader(),
-            _buildBanner(),
+            _buildBanner(context),
             const SizedBox(height: 20),
             Expanded(
               child: Padding(
@@ -114,8 +123,11 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-  Widget _buildBanner() {
-    return Container(
+  Widget _buildBanner(BuildContext context) {
+  return InkWell(
+    borderRadius: BorderRadius.circular(20),
+    onTap: onChangeGateway,
+    child: Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -124,34 +136,62 @@ class DashboardPage extends StatelessWidget {
         border: Border.all(color: Colors.white10),
       ),
       child: Row(
-        children: const [
+        children: [
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'NODE DIRECTORY',
+                const Text(
+                  'ACTIVE GATEWAY',
                   style: TextStyle(
                     color: Colors.white54,
                     fontSize: 11,
                     letterSpacing: 1,
                   ),
                 ),
-                SizedBox(height: 6),
+
+                const SizedBox(height: 6),
+
                 Text(
-                  'Managed IoT Nodes',
-                  style: TextStyle(
+                  gateway.name,
+                  style: const TextStyle(
                     color: AppColors.accentSoft,
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+
+                const SizedBox(height: 4),
+
+                Text(
+                  gateway.gatewayCode,
+                  style: const TextStyle(
+                    color: Colors.white54,
+                    fontSize: 12,
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                const Text(
+                  "Tap to change gateway",
+                  style: TextStyle(
+                    color: Colors.white38,
+                    fontSize: 11,
+                  ),
+                ),
               ],
             ),
           ),
-          Icon(Icons.router, size: 50, color: Colors.white24),
+
+          const Icon(
+            Icons.router,
+            size: 50,
+            color: Colors.white24,
+          ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 }

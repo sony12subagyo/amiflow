@@ -35,10 +35,10 @@ class NodeCard extends StatelessWidget {
                   color: node.online ? AppColors.accent : Colors.white54,
                 ),
               ),
-              Icon(
-                node.online ? Icons.wifi : Icons.wifi_off,
-                color: node.online ? AppColors.online : AppColors.offline,
-              ),
+              // Icon(
+              //   node.online ? Icons.wifi : Icons.wifi_off,
+              //   color: node.online ? AppColors.online : AppColors.offline,
+              // ),
             ],
           ),
           const Spacer(),
