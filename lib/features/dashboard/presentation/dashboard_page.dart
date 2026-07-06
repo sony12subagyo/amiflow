@@ -1,22 +1,75 @@
 // lib/features/dashboard/presentation/dashboard_page.dart
 import 'package:amiflow/core/theme/app_colors.dart';
 import 'package:amiflow/features/dashboard/data/dummy_nodes.dart';
+import 'package:amiflow/features/dashboard/domain/entities/node.dart';
 import 'package:amiflow/features/dashboard/presentation/add_node_dialog.dart';
 import 'package:amiflow/features/dashboard/presentation/node_detail_page.dart';
 import 'package:amiflow/features/dashboard/presentation/widgets/add_node_card.dart';
 import 'package:amiflow/features/dashboard/presentation/widgets/node_card.dart';
 import 'package:amiflow/features/gateway/domain/entities/gateway.dart';
+import 'package:amiflow/shared/widgets/amiflow_header.dart';
 import 'package:flutter/material.dart';
 
-class DashboardPage extends StatelessWidget {
+class DashboardPage extends StatefulWidget {
   final Gateway gateway;
-  final VoidCallback onChangeGateway;
 
-  const DashboardPage({
-    super.key,
-    required this.gateway,
-    required this.onChangeGateway,
-  });
+  const DashboardPage({super.key, required this.gateway});
+
+  @override
+  State<DashboardPage> createState() => _DashboardPageState();
+}
+
+class _DashboardPageState extends State<DashboardPage> {
+  final _searchController = TextEditingController();
+  late List<Node> _nodes;
+  late List<Node> _filtered;
+  String _query = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _nodes = List.of(dummyNodes);
+    _filtered = _nodes;
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _applyFilter() {
+    final q = _query.toLowerCase();
+    setState(() {
+      _filtered = _nodes.where((n) {
+        return n.id.toLowerCase().contains(q) ||
+            n.code.toLowerCase().contains(q) ||
+            n.owner.toLowerCase().contains(q);
+      }).toList();
+    });
+  }
+
+  void _onSearch(String value) {
+    _query = value;
+    _applyFilter();
+  }
+
+  void _removeNode(Node node) {
+    _nodes.remove(node);
+    _applyFilter();
+  }
+
+  Future<void> _openDetail(Node node) async {
+    // NodeDetailPage mengembalikan true kalau node dihapus
+    final deleted = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => NodeDetailPage(node: node)),
+    );
+
+    if (deleted == true) {
+      _removeNode(node);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,46 +78,44 @@ class DashboardPage extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            _buildHeader(),
+            const AmiflowHeader(),
             _buildBanner(context),
-            const SizedBox(height: 20),
+            const SizedBox(height: 15),
+            _buildSearchField(),
+            const SizedBox(height: 15),
             Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
-                child: GridView.builder(
-                  itemCount: dummyNodes.length + 1, // +1 untuk kartu "Add Node"
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                    childAspectRatio: 1,
-                  ),
-                  itemBuilder: (context, index) {
-                    if (index == dummyNodes.length) {
-                      return AddNodeCard(
-                       onTap: () {
-                          showDialog(
-                            context: context,
-                            barrierDismissible: true,
-                            builder: (_) => const AddNodeDialog(),
+              child: _filtered.isEmpty
+                  ? _buildEmptyState()
+                  : Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+                      child: GridView.builder(
+                        itemCount: _filtered.length + 1,
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          childAspectRatio: 1,
+                        ),
+                        itemBuilder: (context, index) {
+                          if (index == _filtered.length) {
+                            return AddNodeCard(
+                              onTap: () {
+                                showDialog(
+                                  context: context,
+                                  barrierDismissible: true,
+                                  builder: (_) => const AddNodeDialog(),
+                                );
+                              },
+                            );
+                          }
+                          return NodeCard(
+                            node: _filtered[index],
+                            onTap: () => _openDetail(_filtered[index]),
                           );
                         },
-                      );
-                    }
-                    // di DashboardPage, bagian itemBuilder, ganti baris return NodeCard:
-                    return GestureDetector(
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              NodeDetailPage(node: dummyNodes[index]),
-                        ),
                       ),
-                      child: NodeCard(node: dummyNodes[index]),
-                    );
-                  },
-                ),
-              ),
+                    ),
             ),
           ],
         ),
@@ -72,126 +123,90 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: const [
-                    Icon(Icons.hub, color: AppColors.accent),
-                    SizedBox(width: 8),
-                    Text(
-                      'AMIFLOW ADMIN',
-                      style: TextStyle(
-                        color: AppColors.accent,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 22,
-                      ),
+  Widget _buildBanner(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(20),
+      onTap: () => Navigator.pop(context),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 20),
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.white10),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'ACTIVE GATEWAY',
+                    style: TextStyle(
+                        color: Colors.white54, fontSize: 11, letterSpacing: 1),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    widget.gateway.name,
+                    style: const TextStyle(
+                      color: AppColors.accentSoft,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
                     ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  children: const [
-                    CircleAvatar(radius: 4, backgroundColor: AppColors.online),
-                    SizedBox(width: 6),
-                    Text(
-                      'STM32 / LoRa Gateway Online',
-                      style: TextStyle(color: Colors.white70, fontSize: 11),
-                    ),
-                  ],
-                ),
-              ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    widget.gateway.gatewayCode,
+                    style: const TextStyle(color: Colors.white54, fontSize: 12),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Tap to change gateway',
+                    style: TextStyle(color: Colors.white38, fontSize: 11),
+                  ),
+                ],
+              ),
             ),
-          ),
-          Container(
-            width: 46,
-            height: 46,
-            decoration: BoxDecoration(
-              color: AppColors.surfaceLight,
-              borderRadius: BorderRadius.circular(50),
-            ),
-            child: const Icon(Icons.sensors, color: Colors.white),
-          ),
-        ],
+            const Icon(Icons.router, size: 50, color: Colors.white24),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildBanner(BuildContext context) {
-  return InkWell(
-    borderRadius: BorderRadius.circular(20),
-    onTap: onChangeGateway,
-    child: Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white10),
+  Widget _buildSearchField() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: TextField(
+        controller: _searchController,
+        onChanged: _onSearch,
+        style: const TextStyle(color: Colors.white),
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: AppColors.surface,
+          hintText: 'Find node by name or ID',
+          hintStyle: const TextStyle(color: Colors.white38),
+          prefixIcon: const Icon(Icons.search, color: Colors.white54),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide.none,
+          ),
+        ),
       ),
-      child: Row(
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'ACTIVE GATEWAY',
-                  style: TextStyle(
-                    color: Colors.white54,
-                    fontSize: 11,
-                    letterSpacing: 1,
-                  ),
-                ),
-
-                const SizedBox(height: 6),
-
-                Text(
-                  gateway.name,
-                  style: const TextStyle(
-                    color: AppColors.accentSoft,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-
-                const SizedBox(height: 4),
-
-                Text(
-                  gateway.gatewayCode,
-                  style: const TextStyle(
-                    color: Colors.white54,
-                    fontSize: 12,
-                  ),
-                ),
-
-                const SizedBox(height: 8),
-
-                const Text(
-                  "Tap to change gateway",
-                  style: TextStyle(
-                    color: Colors.white38,
-                    fontSize: 11,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const Icon(
-            Icons.router,
-            size: 50,
-            color: Colors.white24,
-          ),
+          Icon(Icons.search_off, color: Colors.grey, size: 70),
+          SizedBox(height: 10),
+          Text('No nodes found', style: TextStyle(color: Colors.white54)),
         ],
       ),
-    ),
-  );
-}
+    );
+  }
 }

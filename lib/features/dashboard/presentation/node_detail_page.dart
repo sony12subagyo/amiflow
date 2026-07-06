@@ -5,6 +5,7 @@ import 'package:amiflow/features/dashboard/domain/entities/node.dart';
 import 'package:amiflow/features/dashboard/presentation/widgets/usage_chart.dart';
 import 'package:amiflow/features/dashboard/presentation/widgets/stat_card.dart';
 import 'package:amiflow/features/dashboard/presentation/widgets/config_tile.dart';
+import 'package:amiflow/features/dashboard/presentation/widgets/remove_node_dialog.dart';
 
 class NodeDetailPage extends StatefulWidget {
   final Node node;
@@ -18,7 +19,6 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
   bool _valveOpen = false;
   double _flowRate = 12.8;
 
-  // Data sensor sementara — nanti dari backend per-node.
   final List<double> _chartData = [40, 65, 50, 85, 95, 70, 45, 30, 55, 75, 60];
 
   void _toggleValve() {
@@ -26,6 +26,13 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
       _valveOpen = !_valveOpen;
       _flowRate = _valveOpen ? 38.4 : 0.0;
     });
+  }
+
+  Future<void> _deleteNode() async {
+    final confirmed = await showRemoveNodeDialog(context, widget.node.id);
+    if (!confirmed) return;
+    if (!mounted) return;
+    Navigator.pop(context, true);
   }
 
   @override
@@ -44,6 +51,9 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
               _buildUsageHistory(),
               const SizedBox(height: 15),
               _buildValveSection(),
+              const SizedBox(height: 30),
+              _buildDeleteButton(),
+              const SizedBox(height: 20),
             ],
           ),
         ),
@@ -156,8 +166,8 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
           const SizedBox(height: 20),
           UsageChart(data: _chartData),
           const SizedBox(height: 20),
-          Row(
-            children: const [
+          const Row(
+            children: [
               Expanded(child: StatCard(title: 'TOTAL TODAY', value: '1,240 L')),
               SizedBox(width: 10),
               Expanded(child: StatCard(title: 'PEAK FLOW', value: '24.5 L/min')),
@@ -212,6 +222,23 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
         const SizedBox(height: 10),
         const ConfigTile(icon: Icons.info, title: 'Firmware', subtitle: 'v4.2.1 Stable'),
       ],
+    );
+  }
+
+  Widget _buildDeleteButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.red.withValues(alpha: 0.2),
+          foregroundColor: AppColors.danger,
+          padding: const EdgeInsets.symmetric(vertical: 18),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        ),
+        onPressed: _deleteNode,
+        icon: const Icon(Icons.delete),
+        label: const Text('Remove Node', style: TextStyle(fontSize: 16)),
+      ),
     );
   }
 }
