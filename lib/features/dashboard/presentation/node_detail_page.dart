@@ -16,7 +16,6 @@ class NodeDetailPage extends StatefulWidget {
 
 class _NodeDetailPageState extends State<NodeDetailPage> {
   bool _valveOpen = false;
-  double _flowRate = 12.8;
 
   // Data sensor sementara — nanti dari backend per-node.
   final List<double> _chartData = [40, 65, 50, 85, 95, 70, 45, 30, 55, 75, 60];
@@ -24,7 +23,6 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
   void _toggleValve() {
     setState(() {
       _valveOpen = !_valveOpen;
-      _flowRate = _valveOpen ? 38.4 : 0.0;
     });
   }
 
@@ -63,7 +61,10 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('IOT NETWORK', style: TextStyle(color: Colors.white54, fontSize: 11)),
+              const Text(
+                'IOT NETWORK',
+                style: TextStyle(color: Colors.white54, fontSize: 11),
+              ),
               const SizedBox(height: 4),
               Text(
                 '${node.id} Control',
@@ -99,40 +100,133 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
       ),
       child: Row(
         children: [
-          CircleAvatar(radius: 4, backgroundColor: online ? AppColors.online : AppColors.offline),
+          CircleAvatar(
+            radius: 4,
+            backgroundColor: online ? AppColors.online : AppColors.offline,
+          ),
           const SizedBox(width: 5),
-          Text(online ? 'ONLINE' : 'OFFLINE', style: const TextStyle(color: Colors.white)),
+          Text(
+            online ? 'ONLINE' : 'OFFLINE',
+            style: const TextStyle(color: Colors.white),
+          ),
         ],
       ),
     );
   }
 
   Widget _buildFlowCard() {
+    final node = widget.node;
+
+    Color statusColor;
+
+    switch (node.usageStatus) {
+      case "HEMAT":
+        statusColor = Colors.greenAccent;
+        break;
+
+      case "BOROS":
+        statusColor = Colors.redAccent;
+        break;
+
+      default:
+        statusColor = Colors.orangeAccent;
+    }
+
     return Container(
-      height: 220,
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(24),
       ),
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('CURRENT FLOW RATE', style: TextStyle(color: Colors.white54)),
-            const SizedBox(height: 10),
-            Text(
-              _flowRate.toStringAsFixed(1),
-              style: const TextStyle(
-                color: AppColors.accent,
-                fontSize: 56,
-                fontWeight: FontWeight.bold,
-              ),
+      child: Column(
+        children: [
+          const Text(
+            "TOTAL VOLUME AIR",
+            style: TextStyle(
+              color: Colors.white54,
+              fontSize: 11,
+              letterSpacing: 1,
             ),
-            const Text('L/min', style: TextStyle(color: Colors.white54)),
-            const SizedBox(height: 15),
-            const Text('Stable Flow', style: TextStyle(color: Colors.white70)),
-          ],
-        ),
+          ),
+
+          const SizedBox(height: 12),
+
+          Text(
+            node.waterUsageM3.toStringAsFixed(2),
+            style: const TextStyle(
+              color: AppColors.accent,
+              fontSize: 54,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+
+          const Text(
+            "m³",
+            style: TextStyle(color: Colors.white60, fontSize: 16),
+          ),
+
+          const SizedBox(height: 22),
+
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: AppColors.background,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.water_drop_outlined,
+                  color: AppColors.accent,
+                  size: 18,
+                ),
+
+                const SizedBox(width: 8),
+
+                const Text(
+                  "Penggunaan Normal",
+                  style: TextStyle(color: Colors.white70),
+                ),
+
+                const Spacer(),
+
+                Text(
+                  "${node.normalUsageM3.toStringAsFixed(2)} m³",
+                  style: const TextStyle(
+                    color: AppColors.accent,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 18),
+
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: statusColor.withOpacity(.12),
+              borderRadius: BorderRadius.circular(30),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.circle, size: 12, color: statusColor),
+
+                const SizedBox(width: 8),
+
+                Text(
+                  node.usageStatus,
+                  style: TextStyle(
+                    color: statusColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -150,17 +244,33 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
             alignment: Alignment.centerLeft,
             child: Text(
               'Usage History',
-              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           const SizedBox(height: 20),
           UsageChart(data: _chartData),
           const SizedBox(height: 20),
           Row(
-            children: const [
-              Expanded(child: StatCard(title: 'TOTAL TODAY', value: '1,240 L')),
-              SizedBox(width: 10),
-              Expanded(child: StatCard(title: 'PEAK FLOW', value: '24.5 L/min')),
+            children: [
+              Expanded(
+                child: StatCard(
+                  title: "TOTAL TODAY",
+                  value: "${widget.node.waterUsageM3.toStringAsFixed(2)} m³",
+                ),
+              ),
+
+              const SizedBox(width: 10),
+
+              Expanded(
+                child: StatCard(
+                  title: "PEAK FLOW",
+                  value: "${widget.node.peakFlow.toStringAsFixed(1)} L/min",
+                ),
+              ),
             ],
           ),
         ],
@@ -200,17 +310,30 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                const Text('Tap To Toggle', style: TextStyle(color: Colors.white54)),
+                const Text(
+                  'Tap To Toggle',
+                  style: TextStyle(color: Colors.white54),
+                ),
               ],
             ),
           ),
         ),
         const SizedBox(height: 15),
-        const ConfigTile(icon: Icons.schedule, title: 'Scheduled Flush', subtitle: 'Every 24 Hours'),
-        const SizedBox(height: 10),
-        const ConfigTile(icon: Icons.warning, title: 'Leak Threshold', subtitle: 'Auto-cutoff at 50L/m'),
-        const SizedBox(height: 10),
-        const ConfigTile(icon: Icons.info, title: 'Firmware', subtitle: 'v4.2.1 Stable'),
+        const SizedBox(height: 15),
+
+        ConfigTile(
+          icon: Icons.event_note,
+          title: "Atur Jadwal Valve",
+          subtitle: "Konfigurasi otomatis valve",
+          onTap: () {
+            /// sementara
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text("Halaman Atur Jadwal akan segera dibuat"),
+              ),
+            );
+          },
+        ),
       ],
     );
   }

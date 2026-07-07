@@ -1,5 +1,5 @@
-import 'package:amiflow/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:amiflow/core/theme/app_colors.dart';
 
 class AddNodeDialog extends StatefulWidget {
   const AddNodeDialog({super.key});
@@ -9,18 +9,17 @@ class AddNodeDialog extends StatefulWidget {
 }
 
 class _AddNodeDialogState extends State<AddNodeDialog> {
-  final TextEditingController nodeController = TextEditingController();
-  final TextEditingController loraController = TextEditingController();
-  final TextEditingController ownerController = TextEditingController();
-
-  String status = "ONLINE";
-  String battery = "Full (100%)";
+  final nodeIdController = TextEditingController();
+  final nodeNameController = TextEditingController();
+  final ownerController = TextEditingController();
+  final userController = TextEditingController(text: "0");
 
   @override
   void dispose() {
-    nodeController.dispose();
-    loraController.dispose();
+    nodeIdController.dispose();
+    nodeNameController.dispose();
     ownerController.dispose();
+    userController.dispose();
     super.dispose();
   }
 
@@ -28,211 +27,163 @@ class _AddNodeDialogState extends State<AddNodeDialog> {
   Widget build(BuildContext context) {
     return Dialog(
       backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 22),
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: const Color(0xff2B2D31),
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: Colors.white70,
-            width: 1,
+            color: Colors.white12,
           ),
         ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
 
-              /// HEADER
-              Row(
-                children: [
+            /// HEADER
+            Row(
+              children: [
 
-                  const Expanded(
-                    child: Text(
-                      "Add New IoT Node",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: const BoxDecoration(
+                    color: AppColors.accent,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.add,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                ),
+
+                const SizedBox(width: 12),
+
+                const Expanded(
+                  child: Text(
+                    "Add New Node",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 22,
+                    ),
+                  ),
+                ),
+
+              ],
+            ),
+
+            const SizedBox(height: 24),
+
+            _label("NODE ID (E.G., LORA-7724)"),
+
+            const SizedBox(height: 8),
+
+            _field(
+              controller: nodeIdController,
+              hint: "Enter Node ID",
+            ),
+
+            const SizedBox(height: 18),
+
+            _label("NODE NAME (E.G., NODE 01)"),
+
+            const SizedBox(height: 8),
+
+            _field(
+              controller: nodeNameController,
+              hint: "Enter Node Name",
+            ),
+
+            const SizedBox(height: 18),
+
+            _label("OWNER NAME (NAMA PEMILIK)"),
+
+            const SizedBox(height: 8),
+
+            _field(
+              controller: ownerController,
+              hint: "Enter name",
+            ),
+
+            const SizedBox(height: 18),
+
+            _label("NUMBER OF USERS (JUMLAH USER)"),
+
+            const SizedBox(height: 8),
+
+            _field(
+              controller: userController,
+              hint: "0",
+              keyboardType: TextInputType.number,
+            ),
+
+            const SizedBox(height: 28),
+
+            Row(
+              children: [
+
+                Expanded(
+                  child: SizedBox(
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xff44474F),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
-                    ),
-                  ),
-
-                  InkWell(
-                    onTap: () => Navigator.pop(context),
-                    child: const Icon(
-                      Icons.close,
-                      color: Colors.white70,
-                    ),
-                  )
-
-                ],
-              ),
-
-              const SizedBox(height: 24),
-
-              _label("NODE NAME"),
-
-              const SizedBox(height: 6),
-
-              _textField(
-                controller: nodeController,
-                hint: "e.g. Node 06",
-              ),
-
-              const SizedBox(height: 16),
-
-              _label("LORA ID"),
-
-              const SizedBox(height: 6),
-
-              _textField(
-                controller: loraController,
-                hint: "e.g. 9022",
-              ),
-
-              const SizedBox(height: 16),
-
-              _label("OWNER NAME"),
-
-              const SizedBox(height: 6),
-
-              _textField(
-                controller: ownerController,
-                hint: "e.g. Alex Rivers",
-              ),
-
-              const SizedBox(height: 20),
-
-              Row(
-                children: [
-
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-
-                        _label("INITIAL STATUS"),
-
-                        const SizedBox(height: 6),
-
-                        _dropdown(
-                          value: status,
-                          items: const [
-                            "ONLINE",
-                            "OFFLINE",
-                            "MAINTENANCE"
-                          ],
-                          onChanged: (value) {
-                            setState(() {
-                              status = value!;
-                            });
-                          },
-                        ),
-
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(width: 12),
-
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-
-                        _label("BATTERY POWER"),
-
-                        const SizedBox(height: 6),
-
-                        _dropdown(
-                          value: battery,
-                          items: const [
-                            "Full (100%)",
-                            "75%",
-                            "50%",
-                            "25%",
-                            "Low"
-                          ],
-                          onChanged: (value) {
-                            setState(() {
-                              battery = value!;
-                            });
-                          },
-                        ),
-
-                      ],
-                    ),
-                  ),
-
-                ],
-              ),
-
-              const SizedBox(height: 28),
-
-              Row(
-                children: [
-
-                  Expanded(
-                    child: SizedBox(
-                      height: 48,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xff3B3D42),
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                        child: const Text(
-                          "CANCEL",
-                          style: TextStyle(
-                            color: Colors.white,
-                          ),
+                      child: const Text(
+                        "CANCEL",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
                   ),
+                ),
 
-                  const SizedBox(width: 12),
+                const SizedBox(width: 12),
 
-                  Expanded(
-                    child: SizedBox(
-                      height: 48,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.accent,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
+                Expanded(
+                  child: SizedBox(
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: () {
+
+                        /// TODO
+                        /// Simpan Node
+
+                        Navigator.pop(context);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.accent,
+                        elevation: 6,
+                        shadowColor: AppColors.accent.withOpacity(.5),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        onPressed: () {
-
-                          /// TODO
-                          /// Simpan ke Database/API
-
-                          Navigator.pop(context);
-                        },
-                        child: const Text(
-                          "ADD NODE",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
+                      ),
+                      child: const Text(
+                        "SAVE/ADD",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
                   ),
+                ),
 
-                ],
-              )
-            ],
-          ),
+              ],
+            )
+          ],
         ),
       ),
     );
@@ -245,19 +196,22 @@ class _AddNodeDialogState extends State<AddNodeDialog> {
         text,
         style: const TextStyle(
           color: Colors.white70,
-          fontSize: 11,
-          letterSpacing: 1,
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+          letterSpacing: .5,
         ),
       ),
     );
   }
 
-  Widget _textField({
+  Widget _field({
     required TextEditingController controller,
     required String hint,
+    TextInputType keyboardType = TextInputType.text,
   }) {
     return TextField(
       controller: controller,
+      keyboardType: keyboardType,
       style: const TextStyle(
         color: Colors.white,
       ),
@@ -267,63 +221,25 @@ class _AddNodeDialogState extends State<AddNodeDialog> {
           color: Colors.white38,
         ),
         filled: true,
-        fillColor: const Color(0xff232428),
+        fillColor: const Color(0xff3A3D43),
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: 14,
-          vertical: 14,
+          horizontal: 16,
+          vertical: 16,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(
-            color: Colors.white30,
-          ),
+          borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(
             color: AppColors.accent,
-            width: 1.5,
+            width: 1.2,
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _dropdown({
-    required String value,
-    required List<String> items,
-    required ValueChanged<String?> onChanged,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        color: const Color(0xff232428),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: Colors.white30,
-        ),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: value,
-          dropdownColor: const Color(0xff2B2D31),
-          icon: const Icon(
-            Icons.keyboard_arrow_down,
-            color: Colors.white,
-          ),
-          style: const TextStyle(
-            color: Colors.white,
-          ),
-          isExpanded: true,
-          onChanged: onChanged,
-          items: items
-              .map(
-                (e) => DropdownMenuItem(
-                  value: e,
-                  child: Text(e),
-                ),
-              )
-              .toList(),
         ),
       ),
     );

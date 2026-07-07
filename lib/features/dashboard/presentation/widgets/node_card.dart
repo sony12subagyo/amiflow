@@ -48,11 +48,11 @@ class NodeCard extends StatelessWidget {
           const SizedBox(height: 10),
           Row(
             children: [
-              Icon(
-                node.battery > 50 ? Icons.battery_full : Icons.battery_alert,
-                size: 18,
-                color: node.online ? AppColors.accent : AppColors.offline,
-              ),
+              // Icon(
+              //   node.battery > 50 ? Icons.battery_full : Icons.battery_alert,
+              //   size: 18,
+              //   color: node.online ? AppColors.accent : AppColors.offline,
+              // ),
               const SizedBox(width: 4),
               Text(
                 node.online ? 'ONLINE' : 'OFFLINE',
