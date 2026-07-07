@@ -1,3 +1,4 @@
+// lib/features/gateway/presentation/widgets/gateway_card.dart
 import 'package:amiflow/core/theme/app_colors.dart';
 import 'package:amiflow/features/gateway/domain/entities/gateway.dart';
 import 'package:flutter/material.dart';
@@ -5,11 +6,13 @@ import 'package:flutter/material.dart';
 class GatewayCard extends StatelessWidget {
   final Gateway gateway;
   final VoidCallback? onTap;
+  final VoidCallback? onDelete;
 
   const GatewayCard({
     super.key,
     required this.gateway,
     this.onTap,
+    this.onDelete,
   });
 
   @override
@@ -31,7 +34,7 @@ class GatewayCard extends StatelessWidget {
           boxShadow: gateway.isSelected
               ? [
                   BoxShadow(
-                    color: AppColors.accent.withOpacity(.25),
+                    color: AppColors.accent.withValues(alpha: 0.25),
                     blurRadius: 12,
                     spreadRadius: 1,
                   ),
@@ -41,18 +44,15 @@ class GatewayCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
-            /// ICON + STATUS
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-
                 Container(
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
                     color: gateway.isSelected
-                        ? AppColors.accent.withOpacity(.15)
+                        ? AppColors.accent.withValues(alpha: 0.15)
                         : Colors.white10,
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -64,22 +64,17 @@ class GatewayCard extends StatelessWidget {
                     size: 20,
                   ),
                 ),
-
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: gateway.isOnline
-                        ? AppColors.accent
-                        : Colors.white38,
-                    shape: BoxShape.circle,
+                GestureDetector(
+                  onTap: onDelete,
+                  child: const Icon(
+                    Icons.delete_outline,
+                    color: Colors.white38,
+                    size: 20,
                   ),
                 ),
               ],
             ),
-
             const Spacer(),
-
             Text(
               gateway.name,
               style: const TextStyle(
@@ -88,9 +83,7 @@ class GatewayCard extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-
             const SizedBox(height: 4),
-
             Text(
               gateway.gatewayCode,
               style: const TextStyle(
