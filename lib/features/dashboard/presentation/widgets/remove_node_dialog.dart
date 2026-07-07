@@ -1,8 +1,6 @@
-// lib/features/manage/presentation/widgets/remove_node_dialog.dart
 import 'package:flutter/material.dart';
 import 'package:amiflow/core/theme/app_colors.dart';
 
-// Mengembalikan true jika user menekan "Remove", selain itu false.
 Future<bool> showRemoveNodeDialog(BuildContext context, String nodeName) async {
   final result = await showDialog<bool>(
     context: context,
@@ -29,5 +27,5 @@ Future<bool> showRemoveNodeDialog(BuildContext context, String nodeName) async {
       );
     },
   );
-  return result ?? false; // dialog ditutup di luar tombol = dianggap batal
+  return result ?? false;
 }

@@ -17,33 +17,26 @@ class BottomNav extends StatelessWidget {
         child: Container(
           height: 60,
           decoration: BoxDecoration(
-            color: AppColors.surface,                    // senada kartu dashboard
+            color: AppColors.surface,
             borderRadius: BorderRadius.circular(30),
             border: Border.all(color: Colors.white10),
           ),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               NavItem(
-                icon: Icons.grid_view,                   // Dashboard
+                icon: Icons.grid_view,
                 isActive: currentIndex == 0,
                 activeColor: AppColors.accent,
                 inactiveColor: Colors.white70,
                 onTap: () => onTap(0),
               ),
               NavItem(
-                icon: Icons.delete_sweep,                // Manage
+                icon: Icons.account_circle,
                 isActive: currentIndex == 1,
                 activeColor: AppColors.accent,
                 inactiveColor: Colors.white70,
                 onTap: () => onTap(1),
-              ),
-              NavItem(
-                icon: Icons.account_circle,              // Profile
-                isActive: currentIndex == 2,
-                activeColor: AppColors.accent,
-                inactiveColor: Colors.white70,
-                onTap: () => onTap(2),
               ),
             ],
           ),

@@ -1,17 +1,16 @@
+// lib/features/gateway/presentation/gateway_page.dart
 import 'package:amiflow/core/theme/app_colors.dart';
 import 'package:amiflow/features/gateway/data/dummy_gateway.dart';
-import 'package:amiflow/features/gateway/domain/entities/gateway.dart';
 import 'package:amiflow/features/gateway/presentation/add_gateway_dialog.dart';
 import 'package:amiflow/features/gateway/presentation/widgets/add_gateway.dart';
 import 'package:amiflow/features/gateway/presentation/widgets/gateway_banner.dart';
 import 'package:amiflow/features/gateway/presentation/widgets/gateway_card.dart';
-import 'package:amiflow/features/gateway/presentation/widgets/gateway_header.dart';
+import 'package:amiflow/features/dashboard/presentation/dashboard_page.dart';
+import 'package:amiflow/shared/widgets/amiflow_header.dart';
 import 'package:flutter/material.dart';
 
 class GatewayPage extends StatelessWidget {
-  final ValueChanged<Gateway> onGatewaySelected;
-
-  const GatewayPage({super.key, required this.onGatewaySelected});
+  const GatewayPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -20,11 +19,9 @@ class GatewayPage extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            const GatewayHeader(),
+            const AmiflowHeader(trailingIcon: Icons.settings_input_antenna),
             const GatewayBanner(),
-
             const SizedBox(height: 20),
-
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
@@ -52,7 +49,14 @@ class GatewayPage extends StatelessWidget {
                     return GatewayCard(
                       gateway: dummyGateways[index],
                       onTap: () {
-                        onGatewaySelected(dummyGateways[index]);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => DashboardPage(
+                              gateway: dummyGateways[index],
+                            ),
+                          ),
+                        );
                       },
                     );
                   },
