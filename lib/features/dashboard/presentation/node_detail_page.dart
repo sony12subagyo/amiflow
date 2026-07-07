@@ -1,4 +1,5 @@
 // lib/features/dashboard/presentation/node_detail_page.dart
+import 'package:amiflow/features/schedule/presentation/schedule_page.dart';
 import 'package:flutter/material.dart';
 import 'package:amiflow/core/theme/app_colors.dart';
 import 'package:amiflow/features/dashboard/domain/entities/node.dart';
@@ -282,12 +283,10 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
                   value: "${widget.node.peakFlow.toStringAsFixed(1)} L/min",
                 ),
               ),
-
-         
+            ],
+          ),
         ],
       ),
-        ],
-    ),
     );
   }
 
@@ -339,18 +338,16 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
           title: "Atur Jadwal Valve",
           subtitle: "Konfigurasi otomatis valve",
           onTap: () {
-            /// sementara
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text("Halaman Atur Jadwal akan segera dibuat"),
-              ),
+            /// masuk ke halaman schedule
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const SchedulePage()),
             );
           },
         ),
       ],
     );
   }
-
 
   Widget _buildDeleteButton() {
     return SizedBox(
@@ -360,7 +357,9 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
           backgroundColor: Colors.red.withValues(alpha: 0.2),
           foregroundColor: AppColors.danger,
           padding: const EdgeInsets.symmetric(vertical: 18),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
         ),
         onPressed: _deleteNode,
         icon: const Icon(Icons.delete),
@@ -369,4 +368,3 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
     );
   }
 }
-
