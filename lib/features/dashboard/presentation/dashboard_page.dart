@@ -76,48 +76,53 @@ class _DashboardPageState extends State<DashboardPage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Column(
-          children: [
-            const AmiflowHeader(),
-            _buildBanner(context),
-            const SizedBox(height: 15),
-            _buildSearchField(),
-            const SizedBox(height: 15),
-            Expanded(
-              child: _filtered.isEmpty
-                  ? _buildEmptyState()
-                  : Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
-                      child: GridView.builder(
-                        itemCount: _filtered.length + 1,
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                          childAspectRatio: 1,
-                        ),
-                        itemBuilder: (context, index) {
-                          if (index == _filtered.length) {
-                            return AddNodeCard(
-                              onTap: () {
-                                showDialog(
-                                  context: context,
-                                  barrierDismissible: true,
-                                  builder: (_) => const AddNodeDialog(),
-                                );
-                              },
+        child: Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Column(
+            children: [
+              const AmiflowHeader(),
+              _buildBanner(context),
+              const SizedBox(height: 15),
+              _buildSearchField(),
+              const SizedBox(height: 15),
+              Expanded(
+                child: _filtered.isEmpty
+                    ? _buildEmptyState()
+                    : Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                        child: GridView.builder(
+                          padding: const EdgeInsets.only(bottom: 90),
+                          physics: const BouncingScrollPhysics(),
+                          itemCount: _filtered.length + 1,
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 12,
+                                mainAxisSpacing: 12,
+                                childAspectRatio: 1,
+                              ),
+                          itemBuilder: (context, index) {
+                            if (index == _filtered.length) {
+                              return AddNodeCard(
+                                onTap: () {
+                                  showDialog(
+                                    context: context,
+                                    barrierDismissible: true,
+                                    builder: (_) => const AddNodeDialog(),
+                                  );
+                                },
+                              );
+                            }
+                            return NodeCard(
+                              node: _filtered[index],
+                              onTap: () => _openDetail(_filtered[index]),
                             );
-                          }
-                          return NodeCard(
-                            node: _filtered[index],
-                            onTap: () => _openDetail(_filtered[index]),
-                          );
-                        },
+                          },
+                        ),
                       ),
-                    ),
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -144,7 +149,10 @@ class _DashboardPageState extends State<DashboardPage> {
                   const Text(
                     'ACTIVE GATEWAY',
                     style: TextStyle(
-                        color: Colors.white54, fontSize: 11, letterSpacing: 1),
+                      color: Colors.white54,
+                      fontSize: 11,
+                      letterSpacing: 1,
+                    ),
                   ),
                   const SizedBox(height: 6),
                   Text(

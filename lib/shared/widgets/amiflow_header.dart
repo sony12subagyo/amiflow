@@ -31,17 +31,17 @@ class AmiflowHeader extends StatelessWidget {
                     ),
                   ],
                 ),
-                SizedBox(height: 6),
-                Row(
-                  children: [
-                    CircleAvatar(radius: 4, backgroundColor: AppColors.online),
-                    SizedBox(width: 6),
-                    Text(
-                      'STM32 / LoRa Gateway Online',
-                      style: TextStyle(color: Colors.white70, fontSize: 11),
-                    ),
-                  ],
-                ),
+                // SizedBox(height: 6),
+                // Row(
+                //   children: [
+                //     CircleAvatar(radius: 4, backgroundColor: AppColors.online),
+                //     SizedBox(width: 6),
+                //     Text(
+                //       'STM32 / LoRa Gateway Online',
+                //       style: TextStyle(color: Colors.white70, fontSize: 11),
+                //     ),
+                //   ],
+                // ),
               ],
             ),
           ),

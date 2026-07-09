@@ -1,4 +1,7 @@
 // lib/features/dashboard/presentation/node_detail_page.dart
+import 'package:amiflow/features/dashboard/data/dummy_chart.dart';
+import 'package:amiflow/features/dashboard/domain/entities/chart_filter.dart';
+import 'package:amiflow/features/dashboard/presentation/widgets/chart_detail_sheet.dart';
 import 'package:amiflow/features/schedule/presentation/schedule_page.dart';
 import 'package:flutter/material.dart';
 import 'package:amiflow/core/theme/app_colors.dart';
@@ -18,8 +21,16 @@ class NodeDetailPage extends StatefulWidget {
 
 class _NodeDetailPageState extends State<NodeDetailPage> {
   bool _valveOpen = false;
+  double _flowRate = 12.8;
+  ChartFilter _selectedFilter = ChartFilter.day;
 
-  final List<double> _chartData = [40, 65, 50, 85, 95, 70, 45, 30, 55, 75, 60];
+  double get _totalUsage {
+    return _chartData.fold(0.0, (total, value) => total + value);
+  }
+
+  List<double> get _chartData {
+    return dummyChartData[_selectedFilter] ?? [];
+  }
 
   void _toggleValve() {
     setState(() {
@@ -263,27 +274,42 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
             ),
           ),
           const SizedBox(height: 20),
-          UsageChart(data: _chartData),
+          UsageChart(
+            selectedFilter: _selectedFilter,
+
+            data: _chartData,
+            labels: dummyChartLabels[_selectedFilter]!,
+            onFilterChanged: (filter) {
+              setState(() {
+                _selectedFilter = filter;
+              });
+            },
+
+            onBarTap: (index) {
+              showModalBottomSheet(
+                context: context,
+
+                backgroundColor: Colors.transparent,
+
+                isScrollControlled: true,
+
+                builder: (_) {
+                  return ChartBottomSheet(
+                    title: dummyChartLabels[_selectedFilter]![index],
+
+                    usage: _chartData[index],
+
+                    totalUsage: _totalUsage,
+                  );
+                },
+              );
+            },
+          ),
           const SizedBox(height: 20),
 
-          Row(
-            children: [
-              Expanded(
-                child: StatCard(
-                  title: "TOTAL TODAY",
-                  value: "${widget.node.waterUsageM3.toStringAsFixed(2)} m³",
-                ),
-              ),
-
-              const SizedBox(width: 10),
-
-              Expanded(
-                child: StatCard(
-                  title: "PEAK FLOW",
-                  value: "${widget.node.peakFlow.toStringAsFixed(1)} L/min",
-                ),
-              ),
-            ],
+          StatCard(
+            title: "TOTAL PENGGUNAAN",
+            value: "${_totalUsage.toStringAsFixed(2)} m³",
           ),
         ],
       ),
@@ -306,26 +332,25 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
               children: [
                 CircleAvatar(
                   radius: 45,
-                  backgroundColor: _valveOpen ? AppColors.accent : Colors.grey,
+                  backgroundColor: _valveOpen
+                      ? AppColors.accent
+                      : Colors.grey.shade300,
                   child: Icon(
-                    Icons.settings,
-                    size: 45,
-                    color: _valveOpen ? Colors.black : Colors.white,
+                    _valveOpen ? Icons.lock_open_rounded : Icons.lock_rounded,
+                    size: 46,
+                    color: _valveOpen ? Colors.black : Colors.black87,
                   ),
                 ),
                 const SizedBox(height: 15),
                 Text(
-                  _valveOpen ? 'STATUS : OPEN' : 'STATUS : CLOSED',
-                  style: TextStyle(
-                    color: _valveOpen ? AppColors.accent : Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  _valveOpen ? 'Tap To Close Valve' : 'Tap To Open Valve',
+                  style: const TextStyle(color: Colors.white54),
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  'Tap To Toggle',
-                  style: TextStyle(color: Colors.white54),
-                ),
+                // const Text(
+                //   'Tap To Toggle',
+                //   style: TextStyle(color: Colors.white54),
+                // ),
               ],
             ),
           ),
