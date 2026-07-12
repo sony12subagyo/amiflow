@@ -83,13 +83,13 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'IOT NETWORK',
-                style: TextStyle(color: Colors.white54, fontSize: 11),
-              ),
+              // const Text(
+              //   'IOT NETWORK',
+              //   style: TextStyle(color: Colors.white54, fontSize: 11),
+              // ),
               const SizedBox(height: 4),
               Text(
-                '${node.id} Control',
+                '${node.id} Detail',
                 style: const TextStyle(
                   color: AppColors.accentSoft,
                   fontSize: 22,
@@ -98,7 +98,7 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
               ),
               const SizedBox(height: 4),
               Text(
-                'Owner : ${node.owner}',
+                'Pemilik : ${node.owner}',
                 style: const TextStyle(color: Colors.white60, fontSize: 12),
               ),
               Text(
@@ -128,7 +128,7 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
           ),
           const SizedBox(width: 5),
           Text(
-            online ? 'ONLINE' : 'OFFLINE',
+            online ? 'Aktif' : 'NonAktif',
             style: const TextStyle(color: Colors.white),
           ),
         ],
@@ -163,7 +163,7 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
       child: Column(
         children: [
           const Text(
-            "TOTAL VOLUME AIR",
+            "Total Volume Air",
             style: TextStyle(
               color: Colors.white54,
               fontSize: 11,
@@ -265,7 +265,7 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
           const Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              'Usage History',
+              'Riwayat Penggunaan',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 18,
@@ -308,7 +308,7 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
           const SizedBox(height: 20),
 
           StatCard(
-            title: "TOTAL PENGGUNAAN",
+            title: "Total Penggunaan",
             value: "${_totalUsage.toStringAsFixed(2)} m³",
           ),
         ],
@@ -343,7 +343,7 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
                 ),
                 const SizedBox(height: 15),
                 Text(
-                  _valveOpen ? 'Tap To Close Valve' : 'Tap To Open Valve',
+                  _valveOpen ? 'Klik Untuk Menutup' : 'Klik Untuk Membuka',
                   style: const TextStyle(color: Colors.white54),
                 ),
                 const SizedBox(height: 8),
@@ -388,7 +388,7 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
         ),
         onPressed: _deleteNode,
         icon: const Icon(Icons.delete),
-        label: const Text('Remove Node', style: TextStyle(fontSize: 16)),
+        label: const Text('Hapus Node', style: TextStyle(fontSize: 16)),
       ),
     );
   }

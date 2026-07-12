@@ -5,6 +5,7 @@ import 'package:amiflow/features/schedule/domain/schedule_result.dart';
 import 'package:amiflow/features/schedule/presentation/schedule_dialog.dart';
 import 'package:amiflow/features/schedule/presentation/widgets/day_schedule_card.dart';
 import 'package:amiflow/features/schedule/presentation/widgets/global%20override_switch.dart';
+import 'package:amiflow/features/schedule/presentation/widgets/schedule_toast.dart';
 import 'package:flutter/material.dart';
 
 class SchedulePage extends StatefulWidget {
@@ -17,6 +18,39 @@ class SchedulePage extends StatefulWidget {
 class _SchedulePageState extends State<SchedulePage> {
   late List<ScheduleDay> schedules;
   bool globalOverride = false;
+  int _toMinutes(String time) {
+    final parts = time.split(":");
+
+    return int.parse(parts[0]) * 60 + int.parse(parts[1]);
+  }
+
+  String _durationText(String start, String end) {
+    final open = _toMinutes(start);
+    final close = _toMinutes(end);
+
+    int minutes;
+
+    if (close > open) {
+      minutes = close - open;
+    } else if (close == open) {
+      minutes = 24 * 60;
+    } else {
+      minutes = (24 * 60 - open) + close;
+    }
+
+    final hour = minutes ~/ 60;
+    final minute = minutes % 60;
+
+    if (minute == 0) {
+      return "$hour jam";
+    }
+
+    return "$hour jam $minute menit";
+  }
+
+  bool _isNextDay(String start, String end) {
+    return _toMinutes(end) <= _toMinutes(start);
+  }
 
   @override
   void initState() {
@@ -66,7 +100,7 @@ class _SchedulePageState extends State<SchedulePage> {
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 children: [
                   const Text(
-                    "Valve Schedule",
+                    "Jadwal Valve",
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -77,7 +111,7 @@ class _SchedulePageState extends State<SchedulePage> {
                   const SizedBox(height: 6),
 
                   const Text(
-                    "Configure weekly automated flow routines.",
+                    "Konfigurasikan rutinitas aliran otomatis mingguan.",
                     style: TextStyle(color: Colors.white54),
                   ),
 
@@ -130,6 +164,28 @@ class _SchedulePageState extends State<SchedulePage> {
                                 schedule.endTime = result.enabled
                                     ? result.endTime
                                     : null;
+                              }
+                            });
+
+                            Future.delayed(const Duration(milliseconds: 300), () {
+                              if (!mounted) return;
+
+                              if (result.enabled) {
+                                final duration = _durationText(
+                                  result.startTime,
+                                  result.endTime,
+                                );
+
+                                ScheduleToast.show(
+                                  context,
+                                  message: "Valve aktif selama $duration",
+                                );
+                              } else {
+                                ScheduleToast.show(
+                                  context,
+                                  message:
+                                      "Jadwal ${schedule.day} berhasil dinonaktifkan",
+                                );
                               }
                             });
                           }

@@ -110,7 +110,7 @@ class _AddGatewayDialogState extends State<AddGatewayDialog> {
                         Navigator.pop(context);
                       },
                       child: const Text(
-                        "CANCEL",
+                        "Batal",
                         style: TextStyle(
                           color: Colors.white,
                         ),
@@ -139,7 +139,7 @@ class _AddGatewayDialogState extends State<AddGatewayDialog> {
                         Navigator.pop(context);
                       },
                       child: const Text(
-                        "SAVE",
+                        "Simpan",
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,

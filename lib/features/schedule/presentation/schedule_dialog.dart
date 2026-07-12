@@ -1,5 +1,6 @@
 import 'package:amiflow/core/theme/app_colors.dart';
 import 'package:amiflow/features/schedule/domain/schedule_result.dart';
+// import 'package:amiflow/features/schedule/presentation/widgets/schedule_toast.dart';
 import 'package:flutter/material.dart';
 
 class ScheduleDialog extends StatefulWidget {
@@ -46,10 +47,58 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
     return "$h:$m";
   }
 
+  int _toMinutes(TimeOfDay time) {
+    return time.hour * 60 + time.minute;
+  }
+
+  Duration get activeDuration {
+    final open = _toMinutes(openTime);
+    final close = _toMinutes(closeTime);
+
+    // Same Day
+    if (close > open) {
+      return Duration(minutes: close - open);
+    }
+
+    // Cross Day & 24 Hours
+    return Duration(minutes: (24 * 60 - open) + close);
+  }
+
+  String get activeDurationText {
+    final duration = activeDuration;
+
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes % 60;
+
+    if (hours == 24 && minutes == 0) {
+      return "24 jam";
+    }
+
+    if (minutes == 0) {
+      return "$hours jam";
+    }
+
+    return "$hours jam $minutes menit";
+  }
+
+  bool get isNextDay {
+    return _toMinutes(closeTime) <= _toMinutes(openTime);
+  }
+
+  bool get isFullDay {
+    return _toMinutes(closeTime) == _toMinutes(openTime);
+  }
+
   Future<void> _selectOpenTime() async {
     final picked = await showTimePicker(
       context: context,
       initialTime: openTime,
+      builder: (context, child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+          child: child!,
+        );
+      },
     );
 
     if (picked != null) {
@@ -63,6 +112,12 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
     final picked = await showTimePicker(
       context: context,
       initialTime: closeTime,
+      builder: (context, child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+          child: child!,
+        );
+      },
     );
 
     if (picked != null) {
@@ -108,7 +163,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        "Set Schedule",
+                        "Atur Jadwal",
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -132,7 +187,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
             const SizedBox(height: 25),
 
             _timeField(
-              title: "Open Time",
+              title: "Waktu Buka",
               value: _formatTime(openTime),
               onTap: _selectOpenTime,
             ),
@@ -140,7 +195,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
             const SizedBox(height: 18),
 
             _timeField(
-              title: "Close Time",
+              title: "Waktu Tutup",
               value: _formatTime(closeTime),
               onTap: _selectCloseTime,
             ),
@@ -151,7 +206,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
               children: [
                 const Expanded(
                   child: Text(
-                    "Enable Schedule",
+                    "Aktifkan Jadwal",
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w500,
@@ -174,7 +229,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
               children: [
                 const Expanded(
                   child: Text(
-                    "Apply to all days?",
+                    "Terapkan ke semua hari?",
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w500,
@@ -213,7 +268,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
                         ),
                       ),
                       child: const Text(
-                        "CANCEL",
+                        "Batal",
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -236,8 +291,11 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
                           enabled: enabled,
                           applyAllDays: applyAllDays,
                         );
+                        Future.delayed(const Duration(milliseconds: 900), () {
+                          if (!mounted) return;
 
-                        Navigator.pop(context, result);
+                          Navigator.pop(context, result);
+                        });
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.accent,
@@ -247,7 +305,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
                         ),
                       ),
                       child: const Text(
-                        "SAVE",
+                        "Simpan",
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,

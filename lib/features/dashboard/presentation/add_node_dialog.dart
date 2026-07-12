@@ -62,7 +62,7 @@ class _AddNodeDialogState extends State<AddNodeDialog> {
 
                 const Expanded(
                   child: Text(
-                    "Add New Node",
+                    "Tambah Node Baru",
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -76,40 +76,40 @@ class _AddNodeDialogState extends State<AddNodeDialog> {
 
             const SizedBox(height: 24),
 
-            _label("NODE ID (E.G., LORA-7724)"),
+            _label("Id Node"),
 
             const SizedBox(height: 8),
 
             _field(
               controller: nodeIdController,
-              hint: "Enter Node ID",
+              hint: "Masukan ID Node",
             ),
 
             const SizedBox(height: 18),
 
-            _label("NODE NAME (E.G., NODE 01)"),
+            _label("Nama Node"),
 
             const SizedBox(height: 8),
 
             _field(
               controller: nodeNameController,
-              hint: "Enter Node Name",
+              hint: "Masukan Nama Node",
             ),
 
             const SizedBox(height: 18),
 
-            _label("OWNER NAME (NAMA PEMILIK)"),
+            _label("Nama Pemilik"),
 
             const SizedBox(height: 8),
 
             _field(
               controller: ownerController,
-              hint: "Enter name",
+              hint: "Masukan Nama Pemilik",
             ),
 
             const SizedBox(height: 18),
 
-            _label("NUMBER OF USERS (JUMLAH USER)"),
+            _label("Jumlah Pengguna"),
 
             const SizedBox(height: 8),
 
@@ -139,7 +139,7 @@ class _AddNodeDialogState extends State<AddNodeDialog> {
                         ),
                       ),
                       child: const Text(
-                        "CANCEL",
+                        "Batal",
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -171,7 +171,7 @@ class _AddNodeDialogState extends State<AddNodeDialog> {
                         ),
                       ),
                       child: const Text(
-                        "SAVE/ADD",
+                        "Simpan",
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
