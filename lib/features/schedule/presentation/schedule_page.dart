@@ -4,7 +4,7 @@ import 'package:amiflow/features/schedule/domain/schedule_day.dart';
 import 'package:amiflow/features/schedule/domain/schedule_result.dart';
 import 'package:amiflow/features/schedule/presentation/schedule_dialog.dart';
 import 'package:amiflow/features/schedule/presentation/widgets/day_schedule_card.dart';
-import 'package:amiflow/features/schedule/presentation/widgets/global%20override_switch.dart';
+import 'package:amiflow/features/schedule/presentation/widgets/global_override_switch.dart';
 import 'package:amiflow/features/schedule/presentation/widgets/schedule_toast.dart';
 import 'package:flutter/material.dart';
 
