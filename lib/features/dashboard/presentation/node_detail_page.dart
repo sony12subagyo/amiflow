@@ -2,6 +2,7 @@
 import 'package:amiflow/features/dashboard/data/dummy_chart.dart';
 import 'package:amiflow/features/dashboard/domain/entities/chart_filter.dart';
 import 'package:amiflow/features/dashboard/presentation/widgets/chart_detail_sheet.dart';
+import 'package:amiflow/features/dashboard/presentation/widgets/edit_node_bottom_sheet.dart';
 import 'package:amiflow/features/schedule/presentation/schedule_page.dart';
 import 'package:flutter/material.dart';
 import 'package:amiflow/core/theme/app_colors.dart';
@@ -43,6 +44,15 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
     if (!confirmed) return;
     if (!mounted) return;
     Navigator.pop(context, true);
+  }
+
+  Future<void> _showEditNodeSheet() async {
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => EditNodeBottomSheet(node: widget.node),
+    );
   }
 
   @override
@@ -108,7 +118,21 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
             ],
           ),
         ),
-        _buildStatusPill(node.online),
+        Row(
+          children: [
+            // _buildStatusPill(node.online),
+            const SizedBox(width: 8),
+            IconButton(
+              tooltip: "Edit Node",
+              splashRadius: 22,
+              onPressed: () {
+                print("Edit diklik");
+                _showEditNodeSheet();
+              },
+              icon: const Icon(Icons.edit_outlined, color: AppColors.accent),
+            ),
+          ],
+        ),
       ],
     );
   }
