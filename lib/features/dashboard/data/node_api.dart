@@ -70,4 +70,25 @@ class NodeApi {
       throw Exception('Gagal menambah node (${response.statusCode})');
     }
   }
+
+  Future<bool> updateValve(String nodeId, bool open) async {
+    final url = Uri.parse('${AppConfig.baseUrl}/nodes/$nodeId/valve');
+
+    final response = await http.post(
+      url,
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
+      },
+      body: jsonEncode({'open': open}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['valveOpen'] as bool; // status terbaru dari server
+    } else {
+      throw Exception('Gagal mengubah valve (${response.statusCode})');
+    }
+  }
 }
