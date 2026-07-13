@@ -29,19 +29,12 @@ class ProfilePage extends StatelessWidget {
               const SizedBox(height: 8),
               const Text(ProfileData.role, style: TextStyle(color: Colors.white54)),
               const SizedBox(height: 15),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  ProfileBadge(text: 'ACTIVE NOW', color: AppColors.accent),
-                  SizedBox(width: 10),
-                  ProfileBadge(text: 'LEVEL 4 AUTH', color: Colors.grey),
-                ],
-              ),
+            
               const SizedBox(height: 40),
               const Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'SYSTEM PREFERENCES',
+                  'Informasi Akun',
                   style: TextStyle(color: Colors.white54, fontSize: 12, letterSpacing: 1),
                 ),
               ),
@@ -108,7 +101,7 @@ class ProfilePage extends StatelessWidget {
         ),
         onPressed: () {/* TODO: aksi logout */},
         icon: const Icon(Icons.logout),
-        label: const Text('Logout', style: TextStyle(fontSize: 18)),
+        label: const Text('Keluar', style: TextStyle(fontSize: 18)),
       ),
     );
   }

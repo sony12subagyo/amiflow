@@ -43,7 +43,7 @@ class AddGatewayCard extends StatelessWidget {
             const SizedBox(height: 12),
 
             const Text(
-              "Add Gateway",
+              "Tambah Gateway",
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w600,

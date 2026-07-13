@@ -48,7 +48,7 @@ class _AddGatewayDialogState extends State<AddGatewayDialog> {
 
                 const Expanded(
                   child: Text(
-                    "Add New Gateway",
+                    "Tambah Gateway",
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 18,
@@ -70,24 +70,24 @@ class _AddGatewayDialogState extends State<AddGatewayDialog> {
 
             const SizedBox(height: 24),
 
-            _label("GATEWAY ID"),
+            _label("ID Gateway"),
 
             const SizedBox(height: 6),
 
             _textField(
               controller: gatewayIdController,
-              hint: "Enter Gateway ID",
+              hint: "Masukan ID",
             ),
 
             const SizedBox(height: 18),
 
-            _label("GATEWAY NAME"),
+            _label("Nama Gateway"),
 
             const SizedBox(height: 6),
 
             _textField(
               controller: gatewayNameController,
-              hint: "Enter Gateway Name",
+              hint: "Masukan Nama Gateway",
             ),
 
             const SizedBox(height: 28),
