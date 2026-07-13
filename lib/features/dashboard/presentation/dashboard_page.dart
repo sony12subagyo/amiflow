@@ -6,6 +6,7 @@ import 'package:amiflow/features/dashboard/presentation/add_node_dialog.dart';
 import 'package:amiflow/features/dashboard/presentation/node_detail_page.dart';
 import 'package:amiflow/features/dashboard/presentation/widgets/add_node_card.dart';
 import 'package:amiflow/features/dashboard/presentation/widgets/node_card.dart';
+import 'package:amiflow/features/dashboard/presentation/widgets/notification_bottom_sheet.dart';
 import 'package:amiflow/features/gateway/domain/entities/gateway.dart';
 import 'package:amiflow/shared/widgets/amiflow_header.dart';
 import 'package:flutter/material.dart';
@@ -80,7 +81,18 @@ class _DashboardPageState extends State<DashboardPage> {
           padding: const EdgeInsets.only(top: 8),
           child: Column(
             children: [
-              const AmiflowHeader(),
+              AmiflowHeader(
+                notificationCount: 2,
+
+                onNotificationTap: () {
+                  showModalBottomSheet(
+                    context: context,
+                    backgroundColor: Colors.transparent,
+                    isScrollControlled: true,
+                    builder: (_) => const NotificationBottomSheet(),
+                  );
+                },
+              ),
               _buildBanner(context),
               const SizedBox(height: 15),
               _buildSearchField(),
@@ -212,7 +224,10 @@ class _DashboardPageState extends State<DashboardPage> {
         children: [
           Icon(Icons.search_off, color: Colors.grey, size: 70),
           SizedBox(height: 10),
-          Text('Tidak ada node yang ditemukan', style: TextStyle(color: Colors.white54)),
+          Text(
+            'Tidak ada node yang ditemukan',
+            style: TextStyle(color: Colors.white54),
+          ),
         ],
       ),
     );

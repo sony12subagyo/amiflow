@@ -3,9 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:amiflow/core/theme/app_colors.dart';
 
 class AmiflowHeader extends StatelessWidget {
-  final IconData trailingIcon;
+  final VoidCallback? onNotificationTap;
+  final int notificationCount;
 
-  const AmiflowHeader({super.key, this.trailingIcon = Icons.sensors});
+  const AmiflowHeader({
+    super.key,
+    this.onNotificationTap,
+    this.notificationCount = 5,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -45,14 +50,52 @@ class AmiflowHeader extends StatelessWidget {
               ],
             ),
           ),
-          Container(
-            width: 46,
-            height: 46,
-            decoration: BoxDecoration(
-              color: AppColors.surfaceLight,
-              borderRadius: BorderRadius.circular(50),
-            ),
-            child: Icon(trailingIcon, color: Colors.white),
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceLight,
+                  borderRadius: BorderRadius.circular(50),
+                ),
+                child: IconButton(
+                  splashRadius: 24,
+                  onPressed: onNotificationTap,
+                  icon: const Icon(
+                    Icons.notifications_none_rounded,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+              ),
+
+              if (notificationCount > 0)
+                Positioned(
+                  right: -2,
+                  top: -2,
+                  child: Container(
+                    width: 20,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      color: const Color(0xffFF4D4F),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.surface, width: 1.5),
+                    ),
+                    child: Center(
+                      child: Text(
+                        notificationCount > 9 ? "9+" : "$notificationCount",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
         ],
       ),
