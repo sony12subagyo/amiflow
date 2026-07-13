@@ -12,7 +12,15 @@ class Gateway {
     required this.isOnline,
     this.isSelected = false,
   });
-
+  factory Gateway.fromJson(Map<String, dynamic> json) {
+    return Gateway(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      gatewayCode: json['gatewayCode'] as String,
+      isOnline: json['isOnline'] as bool,
+      // isSelected biarkan default (false) — ini status tampilan, bukan dari server
+    );
+  }
   Gateway copyWith({
     String? id,
     String? name,

@@ -366,7 +366,7 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
             /// masuk ke halaman schedule
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const SchedulePage()),
+              MaterialPageRoute(builder: (_) => SchedulePage(nodeId: widget.node.id)),
             );
           },
         ),

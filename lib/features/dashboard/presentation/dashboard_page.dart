@@ -1,6 +1,6 @@
 // lib/features/dashboard/presentation/dashboard_page.dart
 import 'package:amiflow/core/theme/app_colors.dart';
-import 'package:amiflow/features/dashboard/data/dummy_nodes.dart';
+import 'package:amiflow/features/dashboard/data/node_api.dart'; // <-- BARU (ganti dummy_nodes)
 import 'package:amiflow/features/dashboard/domain/entities/node.dart';
 import 'package:amiflow/features/dashboard/presentation/add_node_dialog.dart';
 import 'package:amiflow/features/dashboard/presentation/node_detail_page.dart';
@@ -21,21 +21,47 @@ class DashboardPage extends StatefulWidget {
 
 class _DashboardPageState extends State<DashboardPage> {
   final _searchController = TextEditingController();
-  late List<Node> _nodes;
-  late List<Node> _filtered;
+  final NodeApi _api = NodeApi(); // <-- BARU
+  List<Node> _nodes = [];
+  List<Node> _filtered = [];
   String _query = '';
+
+  bool _loading = true; // <-- BARU
+  String? _error; // <-- BARU
 
   @override
   void initState() {
     super.initState();
-    _nodes = List.of(dummyNodes);
-    _filtered = _nodes;
+    _loadNodes(); // <-- ganti: dulu dari dummy, sekarang dari API
   }
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadNodes() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final data = await _api.fetchNodes(
+        widget.gateway.id,
+      ); // <-- ganti: dulu dari dummy, sekarang dari API
+      setState(() {
+        _nodes = data;
+        _filtered = data;
+        _loading = false;
+      });
+      _applyFilter(); // terapkan pencarian jika ada teks tersisa
+    } catch (e) {
+      setState(() {
+        _error = 'Gagal memuat data node. Cek koneksi / ngrok.';
+        _loading = false;
+      });
+    }
   }
 
   void _applyFilter() {
@@ -60,14 +86,25 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Future<void> _openDetail(Node node) async {
-    // NodeDetailPage mengembalikan true kalau node dihapus
     final deleted = await Navigator.push<bool>(
       context,
       MaterialPageRoute(builder: (_) => NodeDetailPage(node: node)),
     );
 
     if (deleted == true) {
-      _removeNode(node);
+      try {
+        await _api.deleteNode(node.id); // hapus di server
+        _removeNode(node); // baru dari tampilan
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Node dihapus')));
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Gagal menghapus node')));
+      }
     }
   }
 
@@ -85,45 +122,95 @@ class _DashboardPageState extends State<DashboardPage> {
               const SizedBox(height: 15),
               _buildSearchField(),
               const SizedBox(height: 15),
-              Expanded(
-                child: _filtered.isEmpty
-                    ? _buildEmptyState()
-                    : Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                        child: GridView.builder(
-                          padding: const EdgeInsets.only(bottom: 90),
-                          physics: const BouncingScrollPhysics(),
-                          itemCount: _filtered.length + 1,
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                crossAxisSpacing: 12,
-                                mainAxisSpacing: 12,
-                                childAspectRatio: 1,
-                              ),
-                          itemBuilder: (context, index) {
-                            if (index == _filtered.length) {
-                              return AddNodeCard(
-                                onTap: () {
-                                  showDialog(
-                                    context: context,
-                                    barrierDismissible: true,
-                                    builder: (_) => const AddNodeDialog(),
-                                  );
-                                },
-                              );
-                            }
-                            return NodeCard(
-                              node: _filtered[index],
-                              onTap: () => _openDetail(_filtered[index]),
-                            );
-                          },
-                        ),
-                      ),
-              ),
+              Expanded(child: _buildBody()), // <-- dipisah agar rapi
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  // Menentukan tampilan: loading / error / kosong / grid data
+  Widget _buildBody() {
+    if (_loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(_error!, textAlign: TextAlign.center),
+            const SizedBox(height: 12),
+            ElevatedButton(
+              onPressed: _loadNodes,
+              child: const Text('Coba Lagi'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Tampilkan "tidak ditemukan" HANYA saat sedang mencari & hasil kosong
+    if (_filtered.isEmpty && _query.isNotEmpty) {
+      return _buildEmptyState();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+      child: GridView.builder(
+        padding: const EdgeInsets.only(bottom: 90),
+        physics: const BouncingScrollPhysics(),
+        itemCount: _filtered.length + 1,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: 1,
+        ),
+        itemBuilder: (context, index) {
+          if (index == _filtered.length) {
+            return AddNodeCard(
+              onTap: () async {
+                final hasil = await showDialog<Map<String, String>>(
+                  context: context,
+                  barrierDismissible: true,
+                  builder: (_) => const AddNodeDialog(),
+                );
+
+                if (hasil == null) return; // user cancel
+
+                try {
+                  final baru = await _api.addNode(
+                    gatewayId: widget.gateway.id, // OTOMATIS dari gateway aktif
+                    kodeNode: hasil['kode']!,
+                    namaPemilik: hasil['owner']!,
+                    jumlahPenghuni: int.parse(hasil['jumlah']!),
+                    password: hasil['kode']!, // password default sementara
+                  );
+                  setState(() {
+                    _nodes.add(baru);
+                    _applyFilter();
+                  });
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Node ditambahkan')),
+                  );
+                } catch (e) {
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Gagal menambah node')),
+                  );
+                }
+              },
+            );
+          }
+          return NodeCard(
+            node: _filtered[index],
+            onTap: () => _openDetail(_filtered[index]),
+          );
+        },
       ),
     );
   }

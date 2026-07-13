@@ -32,18 +32,14 @@ class _AddNodeDialogState extends State<AddNodeDialog> {
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: Colors.white12,
-          ),
+          border: Border.all(color: Colors.white12),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-
             /// HEADER
             Row(
               children: [
-
                 Container(
                   width: 34,
                   height: 34,
@@ -51,11 +47,7 @@ class _AddNodeDialogState extends State<AddNodeDialog> {
                     color: AppColors.accent,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
-                    Icons.add,
-                    color: Colors.white,
-                    size: 18,
-                  ),
+                  child: const Icon(Icons.add, color: Colors.white, size: 18),
                 ),
 
                 const SizedBox(width: 12),
@@ -70,7 +62,6 @@ class _AddNodeDialogState extends State<AddNodeDialog> {
                     ),
                   ),
                 ),
-
               ],
             ),
 
@@ -80,10 +71,7 @@ class _AddNodeDialogState extends State<AddNodeDialog> {
 
             const SizedBox(height: 8),
 
-            _field(
-              controller: nodeIdController,
-              hint: "Enter Node ID",
-            ),
+            _field(controller: nodeIdController, hint: "Enter Node ID"),
 
             const SizedBox(height: 18),
 
@@ -91,10 +79,7 @@ class _AddNodeDialogState extends State<AddNodeDialog> {
 
             const SizedBox(height: 8),
 
-            _field(
-              controller: nodeNameController,
-              hint: "Enter Node Name",
-            ),
+            _field(controller: nodeNameController, hint: "Enter Node Name"),
 
             const SizedBox(height: 18),
 
@@ -102,10 +87,7 @@ class _AddNodeDialogState extends State<AddNodeDialog> {
 
             const SizedBox(height: 8),
 
-            _field(
-              controller: ownerController,
-              hint: "Enter name",
-            ),
+            _field(controller: ownerController, hint: "Enter name"),
 
             const SizedBox(height: 18),
 
@@ -123,7 +105,6 @@ class _AddNodeDialogState extends State<AddNodeDialog> {
 
             Row(
               children: [
-
                 Expanded(
                   child: SizedBox(
                     height: 48,
@@ -156,11 +137,28 @@ class _AddNodeDialogState extends State<AddNodeDialog> {
                     height: 48,
                     child: ElevatedButton(
                       onPressed: () {
+                        final kode = nodeIdController.text.trim();
+                        final owner = ownerController.text.trim();
+                        final userText = userController.text.trim();
+                        final jumlah = int.tryParse(userText) ?? 0;
 
-                        /// TODO
-                        /// Simpan Node
+                        // validasi sederhana
+                        if (kode.isEmpty || owner.isEmpty || jumlah < 1) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Isi Node ID, Owner, dan jumlah user (min 1)',
+                              ),
+                            ),
+                          );
+                          return;
+                        }
 
-                        Navigator.pop(context);
+                        Navigator.pop(context, {
+                          'kode': kode,
+                          'owner': owner,
+                          'jumlah': jumlah.toString(),
+                        });
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.accent,
@@ -180,9 +178,8 @@ class _AddNodeDialogState extends State<AddNodeDialog> {
                     ),
                   ),
                 ),
-
               ],
-            )
+            ),
           ],
         ),
       ),
@@ -212,14 +209,10 @@ class _AddNodeDialogState extends State<AddNodeDialog> {
     return TextField(
       controller: controller,
       keyboardType: keyboardType,
-      style: const TextStyle(
-        color: Colors.white,
-      ),
+      style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(
-          color: Colors.white38,
-        ),
+        hintStyle: const TextStyle(color: Colors.white38),
         filled: true,
         fillColor: const Color(0xff3A3D43),
         contentPadding: const EdgeInsets.symmetric(
@@ -236,10 +229,7 @@ class _AddNodeDialogState extends State<AddNodeDialog> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(
-            color: AppColors.accent,
-            width: 1.2,
-          ),
+          borderSide: const BorderSide(color: AppColors.accent, width: 1.2),
         ),
       ),
     );
