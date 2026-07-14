@@ -14,41 +14,21 @@ class ScheduleDay {
     this.endTime,
   });
 
-  /// Total menit Open Time
-  int? get openMinutes {
-    if (startTime == null) return null;
-
-    final parts = startTime!.split(":");
-
-    return int.parse(parts[0]) * 60 +
-        int.parse(parts[1]);
+  factory ScheduleDay.fromJson(Map<String, dynamic> json) {
+    return ScheduleDay(
+      day: json['hari'] as String,
+      enabled:
+          json['aktif'] == 1 || json['aktif'] == true, // terima 1 atau true
+      startTime: _potongDetik(json['jam_buka']), // "06:00:00" -> "06:00"
+      endTime: _potongDetik(json['jam_tutup']),
+    );
   }
 
-  /// Total menit Close Time
-  int? get closeMinutes {
-    if (endTime == null) return null;
-
-    final parts = endTime!.split(":");
-
-    return int.parse(parts[0]) * 60 +
-        int.parse(parts[1]);
-  }
-
-  /// Apakah Close Time berada di hari berikutnya
-  bool get isNextDay {
-    if (openMinutes == null || closeMinutes == null) {
-      return false;
-    }
-
-    return closeMinutes! <= openMinutes!;
-  }
-
-  /// Apakah valve berjalan 24 jam
-  bool get isTwentyFourHours {
-    if (openMinutes == null || closeMinutes == null) {
-      return false;
-    }
-
-    return openMinutes == closeMinutes;
+  // Membuang detik dari format jam: "06:00:00" -> "06:00"
+  static String? _potongDetik(dynamic waktu) {
+    if (waktu == null) return null;
+    final s = waktu.toString();
+    // ambil 5 karakter pertama (HH:MM) jika formatnya HH:MM:SS
+    return s.length >= 5 ? s.substring(0, 5) : s;
   }
 }

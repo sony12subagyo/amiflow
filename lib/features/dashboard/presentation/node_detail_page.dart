@@ -1,5 +1,6 @@
 // lib/features/dashboard/presentation/node_detail_page.dart
 import 'package:amiflow/features/dashboard/data/dummy_chart.dart';
+import 'package:amiflow/features/dashboard/data/node_api.dart';
 import 'package:amiflow/features/dashboard/domain/entities/chart_filter.dart';
 import 'package:amiflow/features/dashboard/presentation/widgets/chart_detail_sheet.dart';
 import 'package:amiflow/features/dashboard/presentation/widgets/edit_node_bottom_sheet.dart';
@@ -21,7 +22,15 @@ class NodeDetailPage extends StatefulWidget {
 }
 
 class _NodeDetailPageState extends State<NodeDetailPage> {
-  bool _valveOpen = false;
+  final NodeApi _api = NodeApi(); // tambahkan di atas, sebagai field kelas
+  late bool _valveOpen;
+
+  @override
+  void initState() {
+    super.initState();
+    _valveOpen = widget.node.valveOpen; // status awal dari server
+  }
+
   double _flowRate = 12.8;
   ChartFilter _selectedFilter = ChartFilter.day;
 
@@ -33,10 +42,34 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
     return dummyChartData[_selectedFilter] ?? [];
   }
 
-  void _toggleValve() {
+  Future<void> _toggleValve() async {
+    final statusBaru = !_valveOpen;
+
+    // ubah tampilan dulu (biar responsif)
     setState(() {
-      _valveOpen = !_valveOpen;
+      _valveOpen = statusBaru;
     });
+
+    try {
+      final hasilServer = await _api.updateValve(widget.node.id, statusBaru);
+      // sinkronkan dengan status yang dikonfirmasi server
+      setState(() {
+        _valveOpen = hasilServer;
+      });
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(hasilServer ? 'Valve dibuka' : 'Valve ditutup')),
+      );
+    } catch (e) {
+      // kalau gagal, kembalikan tampilan ke status semula
+      setState(() {
+        _valveOpen = !statusBaru;
+      });
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Gagal mengubah valve')));
+    }
   }
 
   Future<void> _deleteNode() async {
@@ -390,7 +423,9 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
             /// masuk ke halaman schedule
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const SchedulePage()),
+              MaterialPageRoute(
+                builder: (_) => SchedulePage(nodeId: widget.node.id),
+              ),
             );
           },
         ),

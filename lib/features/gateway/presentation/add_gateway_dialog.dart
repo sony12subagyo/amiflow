@@ -28,21 +28,14 @@ class _AddGatewayDialogState extends State<AddGatewayDialog> {
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: Colors.white12,
-          ),
+          border: Border.all(color: Colors.white12),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-
             Row(
               children: [
-
-                const Icon(
-                  Icons.router,
-                  color: AppColors.accent,
-                ),
+                const Icon(Icons.router, color: AppColors.accent),
 
                 const SizedBox(width: 8),
 
@@ -59,12 +52,8 @@ class _AddGatewayDialogState extends State<AddGatewayDialog> {
 
                 InkWell(
                   onTap: () => Navigator.pop(context),
-                  child: const Icon(
-                    Icons.close,
-                    color: Colors.white54,
-                  ),
-                )
-
+                  child: const Icon(Icons.close, color: Colors.white54),
+                ),
               ],
             ),
 
@@ -74,10 +63,7 @@ class _AddGatewayDialogState extends State<AddGatewayDialog> {
 
             const SizedBox(height: 6),
 
-            _textField(
-              controller: gatewayIdController,
-              hint: "Masukan ID",
-            ),
+            _textField(controller: gatewayIdController, hint: "Masukan ID"),
 
             const SizedBox(height: 18),
 
@@ -94,7 +80,6 @@ class _AddGatewayDialogState extends State<AddGatewayDialog> {
 
             Row(
               children: [
-
                 Expanded(
                   child: SizedBox(
                     height: 46,
@@ -111,9 +96,7 @@ class _AddGatewayDialogState extends State<AddGatewayDialog> {
                       },
                       child: const Text(
                         "Batal",
-                        style: TextStyle(
-                          color: Colors.white,
-                        ),
+                        style: TextStyle(color: Colors.white),
                       ),
                     ),
                   ),
@@ -133,10 +116,19 @@ class _AddGatewayDialogState extends State<AddGatewayDialog> {
                         ),
                       ),
                       onPressed: () {
+                        final kode = gatewayIdController.text.trim();
+                        final nama = gatewayNameController.text.trim();
 
-                        /// TODO Save Gateway
+                        // validasi sederhana: jangan kosong
+                        if (kode.isEmpty || nama.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Isi semua field')),
+                          );
+                          return;
+                        }
 
-                        Navigator.pop(context);
+                        // kembalikan data ke halaman pemanggil
+                        Navigator.pop(context, {'kode': kode, 'nama': nama});
                       },
                       child: const Text(
                         "Simpan",
@@ -147,11 +139,9 @@ class _AddGatewayDialogState extends State<AddGatewayDialog> {
                       ),
                     ),
                   ),
-                )
-
+                ),
               ],
-            )
-
+            ),
           ],
         ),
       ),
@@ -178,14 +168,10 @@ class _AddGatewayDialogState extends State<AddGatewayDialog> {
   }) {
     return TextField(
       controller: controller,
-      style: const TextStyle(
-        color: Colors.white,
-      ),
+      style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(
-          color: Colors.white38,
-        ),
+        hintStyle: const TextStyle(color: Colors.white38),
         filled: true,
         fillColor: AppColors.surfaceLight,
         contentPadding: const EdgeInsets.symmetric(
@@ -198,9 +184,7 @@ class _AddGatewayDialogState extends State<AddGatewayDialog> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(
-            color: AppColors.accent,
-          ),
+          borderSide: const BorderSide(color: AppColors.accent),
         ),
       ),
     );

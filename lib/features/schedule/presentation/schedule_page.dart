@@ -1,5 +1,5 @@
 import 'package:amiflow/core/theme/app_colors.dart';
-import 'package:amiflow/features/schedule/data/dummy_schedule.dart';
+import 'package:amiflow/features/schedule/data/schedule_api.dart';
 import 'package:amiflow/features/schedule/domain/schedule_day.dart';
 import 'package:amiflow/features/schedule/domain/schedule_result.dart';
 import 'package:amiflow/features/schedule/presentation/schedule_dialog.dart';
@@ -9,18 +9,23 @@ import 'package:amiflow/features/schedule/presentation/widgets/schedule_toast.da
 import 'package:flutter/material.dart';
 
 class SchedulePage extends StatefulWidget {
-  const SchedulePage({super.key});
+  final String nodeId;
+
+  const SchedulePage({super.key, required this.nodeId});
 
   @override
   State<SchedulePage> createState() => _SchedulePageState();
 }
 
 class _SchedulePageState extends State<SchedulePage> {
-  late List<ScheduleDay> schedules;
+  final ScheduleApi _api = ScheduleApi();
+  List<ScheduleDay> schedules = [];
   bool globalOverride = false;
+  bool _loading = true;
+  String? _error;
+
   int _toMinutes(String time) {
     final parts = time.split(":");
-
     return int.parse(parts[0]) * 60 + int.parse(parts[1]);
   }
 
@@ -29,7 +34,6 @@ class _SchedulePageState extends State<SchedulePage> {
     final close = _toMinutes(end);
 
     int minutes;
-
     if (close > open) {
       minutes = close - open;
     } else if (close == open) {
@@ -41,22 +45,86 @@ class _SchedulePageState extends State<SchedulePage> {
     final hour = minutes ~/ 60;
     final minute = minutes % 60;
 
-    if (minute == 0) {
-      return "$hour jam";
-    }
-
+    if (minute == 0) return "$hour jam";
     return "$hour jam $minute menit";
-  }
-
-  bool _isNextDay(String start, String end) {
-    return _toMinutes(end) <= _toMinutes(start);
   }
 
   @override
   void initState() {
     super.initState();
+    _loadSchedules();
+  }
 
-    schedules = List.from(dummySchedules);
+  Future<void> _loadSchedules() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final dataServer = await _api.fetchSchedules(widget.nodeId);
+
+      final hariList = [
+        'Senin',
+        'Selasa',
+        'Rabu',
+        'Kamis',
+        'Jumat',
+        'Sabtu',
+        'Minggu',
+      ];
+      final lengkap = hariList.map((namaHari) {
+        final adaDiServer = dataServer.where((s) => s.day == namaHari);
+        if (adaDiServer.isNotEmpty) return adaDiServer.first;
+        return ScheduleDay(day: namaHari);
+      }).toList();
+
+      setState(() {
+        schedules = lengkap;
+        _loading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = 'Gagal memuat jadwal. Cek koneksi / ngrok.';
+        _loading = false;
+      });
+    }
+  }
+
+  Future<void> _simpanKeServer(
+    ScheduleResult result,
+    ScheduleDay schedule,
+  ) async {
+    try {
+      if (result.applyAllDays) {
+        for (final item in schedules) {
+          await _api.saveSchedule(
+            nodeId: widget.nodeId,
+            hari: item.day,
+            aktif: item.enabled,
+            jamBuka: item.startTime,
+            jamTutup: item.endTime,
+          );
+        }
+      } else {
+        await _api.saveSchedule(
+          nodeId: widget.nodeId,
+          hari: schedule.day,
+          aktif: schedule.enabled,
+          jamBuka: schedule.startTime,
+          jamTutup: schedule.endTime,
+        );
+      }
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Jadwal tersimpan')));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Gagal menyimpan jadwal ke server')),
+      );
+    }
   }
 
   @override
@@ -75,7 +143,6 @@ class _SchedulePageState extends State<SchedulePage> {
                     onPressed: () => Navigator.pop(context),
                     icon: const Icon(Icons.arrow_back, color: Colors.white),
                   ),
-
                   const Text(
                     "AMIFLOW",
                     style: TextStyle(
@@ -84,128 +151,136 @@ class _SchedulePageState extends State<SchedulePage> {
                       fontSize: 18,
                     ),
                   ),
-
                   const Spacer(),
-
-                  // IconButton(
-                  //   onPressed: () {},
-                  //   icon: const Icon(Icons.refresh, color: Colors.white70),
-                  // ),
                 ],
               ),
             ),
 
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                children: [
-                  const Text(
-                    "Jadwal Valve",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 26,
-                    ),
-                  ),
-
-                  const SizedBox(height: 6),
-
-                  const Text(
-                    "Konfigurasikan rutinitas aliran otomatis mingguan.",
-                    style: TextStyle(color: Colors.white54),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  ...schedules.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final schedule = entry.value;
-
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: DayScheduleCard(
-                        day: schedule.day,
-                        enabled: schedule.enabled,
-                        globalOverride: globalOverride,
-                        startTime: schedule.startTime,
-                        endTime: schedule.endTime,
-
-                        onTap: () async {
-                          final ScheduleResult? result =
-                              await showDialog<ScheduleResult>(
-                                context: context,
-                                builder: (_) => ScheduleDialog(
-                                  day: schedule.day,
-                                  startTime: schedule.startTime,
-                                  endTime: schedule.endTime,
-                                ),
-                              );
-                          if (result != null) {
-                            setState(() {
-                              if (result.applyAllDays) {
-                                for (final item in schedules) {
-                                  item.enabled = result.enabled;
-
-                                  item.startTime = result.enabled
-                                      ? result.startTime
-                                      : null;
-
-                                  item.endTime = result.enabled
-                                      ? result.endTime
-                                      : null;
-                                }
-                              } else {
-                                schedule.enabled = result.enabled;
-
-                                schedule.startTime = result.enabled
-                                    ? result.startTime
-                                    : null;
-
-                                schedule.endTime = result.enabled
-                                    ? result.endTime
-                                    : null;
-                              }
-                            });
-
-                            Future.delayed(const Duration(milliseconds: 300), () {
-                              if (!mounted) return;
-
-                              if (result.enabled) {
-                                final duration = _durationText(
-                                  result.startTime,
-                                  result.endTime,
-                                );
-
-                                ScheduleToast.show(
-                                  context,
-                                  message: "Valve aktif selama $duration",
-                                );
-                              } else {
-                                ScheduleToast.show(
-                                  context,
-                                  message:
-                                      "Jadwal ${schedule.day} berhasil dinonaktifkan",
-                                );
-                              }
-                            });
-                          }
-                        },
+              child: _loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _error != null
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            _error!,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(color: Colors.white54),
+                          ),
+                          const SizedBox(height: 12),
+                          ElevatedButton(
+                            onPressed: _loadSchedules,
+                            child: const Text('Coba Lagi'),
+                          ),
+                        ],
                       ),
-                    );
-                  }),
+                    )
+                  : ListView(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      children: [
+                        const Text(
+                          "Jadwal Valve",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 26,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          "Konfigurasikan rutinitas aliran otomatis mingguan.",
+                          style: TextStyle(color: Colors.white54),
+                        ),
+                        const SizedBox(height: 24),
 
-                  const SizedBox(height: 20),
-                  GlobalOverrideSwitch(
-                    value: globalOverride,
-                    onChanged: (value) {
-                      setState(() {
-                        globalOverride = value;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 30),
-                ],
-              ),
+                        ...schedules.asMap().entries.map((entry) {
+                          final schedule = entry.value;
+
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: DayScheduleCard(
+                              day: schedule.day,
+                              enabled: schedule.enabled,
+                              globalOverride: globalOverride,
+                              startTime: schedule.startTime,
+                              endTime: schedule.endTime,
+                              onTap: () async {
+                                final ScheduleResult? result =
+                                    await showDialog<ScheduleResult>(
+                                      context: context,
+                                      builder: (_) => ScheduleDialog(
+                                        day: schedule.day,
+                                        startTime: schedule.startTime,
+                                        endTime: schedule.endTime,
+                                      ),
+                                    );
+                                if (result != null) {
+                                  // 1) Perbarui tampilan lokal
+                                  setState(() {
+                                    if (result.applyAllDays) {
+                                      for (final item in schedules) {
+                                        item.enabled = result.enabled;
+                                        item.startTime = result.enabled
+                                            ? result.startTime
+                                            : null;
+                                        item.endTime = result.enabled
+                                            ? result.endTime
+                                            : null;
+                                      }
+                                    } else {
+                                      schedule.enabled = result.enabled;
+                                      schedule.startTime = result.enabled
+                                          ? result.startTime
+                                          : null;
+                                      schedule.endTime = result.enabled
+                                          ? result.endTime
+                                          : null;
+                                    }
+                                  });
+
+                                  // 2) Kirim ke server
+                                  await _simpanKeServer(result, schedule);
+
+                                  // 3) Toast konfirmasi
+                                  Future.delayed(
+                                    const Duration(milliseconds: 300),
+                                    () {
+                                      if (!mounted) return;
+                                      if (result.enabled) {
+                                        ScheduleToast.show(
+                                          context,
+                                          message:
+                                              "Valve aktif selama ${_durationText(result.startTime, result.endTime)}",
+                                        );
+                                      } else {
+                                        ScheduleToast.show(
+                                          context,
+                                          message:
+                                              "Jadwal ${schedule.day} berhasil dinonaktifkan",
+                                        );
+                                      }
+                                    },
+                                  );
+                                }
+                              },
+                            ),
+                          );
+                        }),
+
+                        const SizedBox(height: 20),
+                        GlobalOverrideSwitch(
+                          value: globalOverride,
+                          onChanged: (value) {
+                            setState(() {
+                              globalOverride = value;
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 30),
+                      ],
+                    ),
             ),
           ],
         ),

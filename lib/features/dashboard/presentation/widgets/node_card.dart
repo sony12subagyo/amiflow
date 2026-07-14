@@ -8,11 +8,7 @@ class NodeCard extends StatelessWidget {
   final Node node;
   final VoidCallback? onTap;
 
-  const NodeCard({
-    super.key,
-    required this.node,
-    this.onTap,
-  });
+  const NodeCard({super.key, required this.node, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -45,9 +41,7 @@ class NodeCard extends StatelessWidget {
                   ),
                   child: Icon(
                     Icons.sensors,
-                    color: node.online
-                        ? AppColors.accent
-                        : Colors.white54,
+                    color: node.online ? AppColors.accent : Colors.white54,
                   ),
                 ),
               ],
@@ -56,10 +50,13 @@ class NodeCard extends StatelessWidget {
             const Spacer(),
 
             Text(
-              node.id,
+              node.owner,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
+                fontSize: 14,
               ),
             ),
 
@@ -67,10 +64,9 @@ class NodeCard extends StatelessWidget {
 
             Text(
               node.code,
-              style: const TextStyle(
-                color: Colors.white54,
-                fontSize: 12,
-              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: Colors.white54, fontSize: 12),
             ),
 
             const SizedBox(height: 10),
@@ -86,15 +82,12 @@ class NodeCard extends StatelessWidget {
                 //       ? AppColors.accent
                 //       : AppColors.offline,
                 // ),
-
                 const SizedBox(width: 4),
 
                 Text(
                   node.online ? 'ONLINE' : 'OFFLINE',
                   style: TextStyle(
-                    color: node.online
-                        ? Colors.white70
-                        : AppColors.offline,
+                    color: node.online ? Colors.white70 : AppColors.offline,
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
                   ),

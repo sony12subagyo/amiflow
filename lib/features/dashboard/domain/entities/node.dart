@@ -35,6 +35,19 @@ class Node {
     required this.valveOpen,
   });
 
+  factory Node.fromJson(Map<String, dynamic> json) {
+    return Node(
+      id: json['id'] as String,
+      code: json['code'] as String,
+      online: json['online'] as bool,
+      owner: json['owner'] as String,
+      totalUsers: json['totalUsers'] as int,
+      waterUsageM3: (json['waterUsageM3'] as num).toDouble(),
+      peakFlow: (json['peakFlow'] as num).toDouble(),
+      valveOpen: json['valveOpen'] as bool,
+    );
+  }
+
   /// ============================================
   /// Penggunaan normal air
   ///
