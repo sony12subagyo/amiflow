@@ -78,12 +78,15 @@ class _GatewayPageState extends State<GatewayPage> {
         child: Column(
           children: [
             const AmiflowHeader(),
+
             const GatewayBanner(),
+
             const SizedBox(height: 20),
+
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
-                child: _buildContent(), // <-- dipisah agar rapi
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: _buildContent(),
               ),
             ),
           ],
@@ -106,8 +109,8 @@ class _GatewayPageState extends State<GatewayPage> {
             Text(_error!, textAlign: TextAlign.center),
             const SizedBox(height: 12),
             ElevatedButton(
-              onPressed: _loadGateways, // tombol coba lagi
-              child: const Text('Coba Lagi'),
+              onPressed: _loadGateways,
+              child: const Text("Coba Lagi"),
             ),
           ],
         ),
@@ -115,13 +118,19 @@ class _GatewayPageState extends State<GatewayPage> {
     }
 
     return GridView.builder(
+      padding: const EdgeInsets.only(bottom: 50),
+
+      physics: const BouncingScrollPhysics(),
+
       itemCount: _gateways.length + 1,
+
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
-        childAspectRatio: .95,
+        mainAxisExtent: 190,
       ),
+
       itemBuilder: (context, index) {
         if (index == _gateways.length) {
           return AddGatewayCard(
@@ -132,24 +141,28 @@ class _GatewayPageState extends State<GatewayPage> {
                 builder: (_) => const AddGatewayDialog(),
               );
 
-              if (hasil == null) return; // user menekan cancel/close
+              if (hasil == null) return;
 
               try {
                 final baru = await _api.addGateway(
                   kodeGateway: hasil['kode']!,
                   nama: hasil['nama']!,
                 );
+
                 setState(() {
-                  _gateways.add(baru); // tambahkan ke tampilan
+                  _gateways.add(baru);
                 });
+
                 if (!mounted) return;
+
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Gateway ditambahkan')),
+                  const SnackBar(content: Text("Gateway ditambahkan")),
                 );
               } catch (e) {
                 if (!mounted) return;
+
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Gagal menambah gateway')),
+                  const SnackBar(content: Text("Gagal menambah gateway")),
                 );
               }
             },
@@ -157,6 +170,7 @@ class _GatewayPageState extends State<GatewayPage> {
         }
 
         final gateway = _gateways[index];
+
         return GatewayCard(
           gateway: gateway,
           onTap: () {

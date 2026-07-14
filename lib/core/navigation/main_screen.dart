@@ -43,18 +43,32 @@ class _MainScreenState extends State<MainScreen> {
       child: BlocBuilder<NavigationCubit, int>(
         builder: (context, currentIndex) {
           return Scaffold(
-            extendBody: true,
             backgroundColor: AppColors.background,
-            body: PageView(
-              controller: _pageController,
-              physics: const NeverScrollableScrollPhysics(),
-              onPageChanged: (index) =>
-                  context.read<NavigationCubit>().selectTab(index),
-              children: AppPages.pages,
-            ),
-            bottomNavigationBar: BottomNav(
-              currentIndex: currentIndex,
-              onTap: _onNavTap,
+
+            body: Stack(
+              children: [
+                /// PAGE
+                PageView(
+                  controller: _pageController,
+                  physics: const NeverScrollableScrollPhysics(),
+                  onPageChanged: (index) =>
+                      context.read<NavigationCubit>().selectTab(index),
+                  children: AppPages.pages,
+                ),
+
+                /// FLOATING NAVBAR
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 16,
+                  child: SafeArea(
+                    child: BottomNav(
+                      currentIndex: currentIndex,
+                      onTap: _onNavTap,
+                    ),
+                  ),
+                ),
+              ],
             ),
           );
         },
