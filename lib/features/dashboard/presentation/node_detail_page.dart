@@ -3,6 +3,7 @@ import 'package:amiflow/features/dashboard/data/dummy_chart.dart';
 import 'package:amiflow/features/dashboard/data/node_api.dart';
 import 'package:amiflow/features/dashboard/domain/entities/chart_filter.dart';
 import 'package:amiflow/features/dashboard/presentation/widgets/chart_detail_sheet.dart';
+import 'package:amiflow/features/dashboard/presentation/widgets/edit_node_bottom_sheet.dart';
 import 'package:amiflow/features/schedule/presentation/schedule_page.dart';
 import 'package:flutter/material.dart';
 import 'package:amiflow/core/theme/app_colors.dart';
@@ -78,6 +79,15 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
     Navigator.pop(context, true);
   }
 
+  Future<void> _showEditNodeSheet() async {
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => EditNodeBottomSheet(node: widget.node),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -116,13 +126,13 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'IOT NETWORK',
-                style: TextStyle(color: Colors.white54, fontSize: 11),
-              ),
+              // const Text(
+              //   'IOT NETWORK',
+              //   style: TextStyle(color: Colors.white54, fontSize: 11),
+              // ),
               const SizedBox(height: 4),
               Text(
-                '${node.id} Control',
+                '${node.id} Detail',
                 style: const TextStyle(
                   color: AppColors.accentSoft,
                   fontSize: 22,
@@ -131,7 +141,7 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
               ),
               const SizedBox(height: 4),
               Text(
-                'Owner : ${node.owner}',
+                'Pemilik : ${node.owner}',
                 style: const TextStyle(color: Colors.white60, fontSize: 12),
               ),
               Text(
@@ -141,7 +151,21 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
             ],
           ),
         ),
-        _buildStatusPill(node.online),
+        Row(
+          children: [
+            // _buildStatusPill(node.online),
+            const SizedBox(width: 8),
+            IconButton(
+              tooltip: "Edit Node",
+              splashRadius: 22,
+              onPressed: () {
+                print("Edit diklik");
+                _showEditNodeSheet();
+              },
+              icon: const Icon(Icons.edit_outlined, color: AppColors.accent),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -161,7 +185,7 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
           ),
           const SizedBox(width: 5),
           Text(
-            online ? 'ONLINE' : 'OFFLINE',
+            online ? 'Aktif' : 'NonAktif',
             style: const TextStyle(color: Colors.white),
           ),
         ],
@@ -196,7 +220,7 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
       child: Column(
         children: [
           const Text(
-            "TOTAL VOLUME AIR",
+            "Total Volume Air",
             style: TextStyle(
               color: Colors.white54,
               fontSize: 11,
@@ -298,7 +322,7 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
           const Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              'Usage History',
+              'Riwayat Penggunaan',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 18,
@@ -341,7 +365,7 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
           const SizedBox(height: 20),
 
           StatCard(
-            title: "TOTAL PENGGUNAAN",
+            title: "Total Penggunaan",
             value: "${_totalUsage.toStringAsFixed(2)} m³",
           ),
         ],
@@ -376,7 +400,7 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
                 ),
                 const SizedBox(height: 15),
                 Text(
-                  _valveOpen ? 'Tap To Close Valve' : 'Tap To Open Valve',
+                  _valveOpen ? 'Klik Untuk Menutup' : 'Klik Untuk Membuka',
                   style: const TextStyle(color: Colors.white54),
                 ),
                 const SizedBox(height: 8),
@@ -423,7 +447,7 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
         ),
         onPressed: _deleteNode,
         icon: const Icon(Icons.delete),
-        label: const Text('Remove Node', style: TextStyle(fontSize: 16)),
+        label: const Text('Hapus Node', style: TextStyle(fontSize: 16)),
       ),
     );
   }

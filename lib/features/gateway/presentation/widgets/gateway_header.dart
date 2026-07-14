@@ -38,40 +38,7 @@ class GatewayHeader extends StatelessWidget {
                 ),
 
                 SizedBox(height: 6),
-
-                Row(
-                  children: [
-
-                    CircleAvatar(
-                      radius: 4,
-                      backgroundColor: AppColors.online,
-                    ),
-
-                    SizedBox(width: 6),
-
-                    Text(
-                      "STM32 / LoRa Gateway Online",
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ],
-                ),
               ],
-            ),
-          ),
-
-          Container(
-            width: 46,
-            height: 46,
-            decoration: BoxDecoration(
-              color: AppColors.surfaceLight,
-              borderRadius: BorderRadius.circular(50),
-            ),
-            child: const Icon(
-              Icons.settings_input_antenna,
-              color: Colors.white,
             ),
           ),
         ],

@@ -2,18 +2,18 @@ import 'package:amiflow/features/schedule/domain/schedule_day.dart';
 
 final List<ScheduleDay> dummySchedules = [
 
-  ScheduleDay(day: "MONDAY"),
+  ScheduleDay(day: "Senin"),
 
-  ScheduleDay(day: "TUESDAY"),
+  ScheduleDay(day: "Selasa"),
 
-  ScheduleDay(day: "WEDNESDAY"),
+  ScheduleDay(day: "Rabu"),
 
-  ScheduleDay(day: "THURSDAY"),
+  ScheduleDay(day: "Kamis"),
 
-  ScheduleDay(day: "FRIDAY"),
+  ScheduleDay(day: "Jumat"),
 
-  ScheduleDay(day: "SATURDAY"),
+  ScheduleDay(day: "Sabtu"),
 
-  ScheduleDay(day: "SUNDAY"),
+  ScheduleDay(day: "Minggu"),
 
 ];

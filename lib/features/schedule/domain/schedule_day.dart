@@ -13,6 +13,7 @@ class ScheduleDay {
     this.startTime,
     this.endTime,
   });
+
   factory ScheduleDay.fromJson(Map<String, dynamic> json) {
     return ScheduleDay(
       day: json['hari'] as String,

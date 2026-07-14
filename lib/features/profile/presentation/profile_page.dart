@@ -15,7 +15,12 @@ class ProfilePage extends StatelessWidget {
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 100), // 100 = ruang untuk pill
+          padding: const EdgeInsets.fromLTRB(
+            20,
+            16,
+            20,
+            100,
+          ), // 100 = ruang untuk pill
           child: Column(
             children: [
               const AmiflowHeader(),
@@ -24,35 +29,41 @@ class ProfilePage extends StatelessWidget {
               const SizedBox(height: 20),
               const Text(
                 ProfileData.name,
-                style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 8),
-              const Text(ProfileData.role, style: TextStyle(color: Colors.white54)),
-              const SizedBox(height: 15),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  ProfileBadge(text: 'ACTIVE NOW', color: AppColors.accent),
-                  SizedBox(width: 10),
-                  ProfileBadge(text: 'LEVEL 4 AUTH', color: Colors.grey),
-                ],
+              const Text(
+                ProfileData.role,
+                style: TextStyle(color: Colors.white54),
               ),
+              const SizedBox(height: 15),
+
               const SizedBox(height: 40),
               const Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'SYSTEM PREFERENCES',
-                  style: TextStyle(color: Colors.white54, fontSize: 12, letterSpacing: 1),
+                  'Informasi Akun',
+                  style: TextStyle(
+                    color: Colors.white54,
+                    fontSize: 12,
+                    letterSpacing: 1,
+                  ),
                 ),
               ),
               const SizedBox(height: 15),
               ProfileTile(
                 icon: Icons.person,
                 title: 'Edit Profile',
-                onTap: () {/* TODO: buka edit profile */},
+                onTap: () {
+                  /* TODO: buka edit profile */
+                },
               ),
               const SizedBox(height: 30),
-              _buildLogoutButton(),
+              _buildLogoutButton(context),
               const SizedBox(height: 20),
               const Text(
                 ProfileData.appVersion,
@@ -96,17 +107,22 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildLogoutButton() {
+  Widget _buildLogoutButton(BuildContext context) {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton.icon(
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.red.withOpacity(0.2),
+          backgroundColor: Colors.red.withValues(alpha: 0.2),
           foregroundColor: AppColors.danger,
           padding: const EdgeInsets.symmetric(vertical: 18),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
         ),
-        onPressed: () {/* TODO: aksi logout */},
+        onPressed: () {
+          // Hapus semua halaman di stack, masuk ke login
+          Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);
+        },
         icon: const Icon(Icons.logout),
         label: const Text('Logout', style: TextStyle(fontSize: 18)),
       ),

@@ -9,13 +9,13 @@ Future<bool> showRemoveGatewayDialog(BuildContext context, String gatewayName) a
       return AlertDialog(
         backgroundColor: AppColors.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Confirm Removal', style: TextStyle(color: Colors.white)),
+        title: const Text('Konfirmasi Penghapusan', style: TextStyle(color: Colors.white)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Are you sure you want to remove $gatewayName?',
+              'Apakah Anda yakin ingin menghapus $gatewayName?',
               style: const TextStyle(color: Colors.white70),
             ),
             const SizedBox(height: 12),
@@ -32,7 +32,7 @@ Future<bool> showRemoveGatewayDialog(BuildContext context, String gatewayName) a
                   SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      'Removing this gateway will affect all nodes connected to it.',
+                      'Menghapus gateway ini akan memengaruhi semua node yang terhubung kepadanya.',
                       style: TextStyle(color: Colors.redAccent, fontSize: 12),
                     ),
                   ),
@@ -44,12 +44,12 @@ Future<bool> showRemoveGatewayDialog(BuildContext context, String gatewayName) a
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: const Text('Batal'),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Remove'),
+            child: const Text('Hapus'),
           ),
         ],
       );

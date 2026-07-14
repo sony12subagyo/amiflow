@@ -1,6 +1,8 @@
 import 'package:amiflow/core/theme/app_colors.dart';
 import 'package:amiflow/features/schedule/domain/schedule_result.dart';
+// import 'package:amiflow/features/schedule/presentation/widgets/schedule_toast.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 
 class ScheduleDialog extends StatefulWidget {
   final String day;
@@ -46,11 +48,266 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
     return "$h:$m";
   }
 
-  Future<void> _selectOpenTime() async {
-    final picked = await showTimePicker(
+  Future<TimeOfDay?> _showCupertinoTimePicker(TimeOfDay initialTime) async {
+    int selectedHour = initialTime.hour;
+    int selectedMinute = initialTime.minute;
+
+    return await showCupertinoModalPopup<TimeOfDay>(
       context: context,
-      initialTime: openTime,
+      builder: (_) {
+        return Container(
+          height: 470,
+          decoration: const BoxDecoration(
+            color: Color(0xff1F2024),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+          ),
+          child: Column(
+            children: [
+              const SizedBox(height: 16),
+
+              Container(
+                width: 45,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: Colors.white24,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+
+              const SizedBox(height: 10),
+
+              Divider(color: Colors.white10, indent: 20, endIndent: 20),
+
+              const SizedBox(height: 12),
+
+              const Text(
+                "Pilih Waktu",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  decoration: TextDecoration.none,
+                  letterSpacing: 0.5,
+                  height: 1.2,
+                ),
+              ),
+
+              Expanded(
+                child: Row(
+                  children: [
+                    /// JAM
+                    Expanded(
+                      child: CupertinoPicker.builder(
+                        scrollController: FixedExtentScrollController(
+                          initialItem: selectedHour,
+                        ),
+
+                        itemExtent: 55,
+
+                        diameterRatio: 1.3,
+
+                        squeeze: 1.15,
+
+                        useMagnifier: true,
+
+                        magnification: 1.15,
+
+                        selectionOverlay: Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: AppColors.accent.withOpacity(.15),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: AppColors.accent.withOpacity(.35),
+                            ),
+                          ),
+                        ),
+
+                        childCount: 24,
+
+                        onSelectedItemChanged: (value) {
+                          selectedHour = value;
+                        },
+
+                        itemBuilder: (_, index) {
+                          return Center(
+                            child: Text(
+                              index.toString().padLeft(2, "0"),
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 30,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+
+                    Container(
+                      alignment: Alignment.center,
+                      width: 40,
+                      child: const Text(
+                        ":",
+                        style: TextStyle(
+                          color: AppColors.accent,
+                          fontSize: 34,
+                          fontWeight: FontWeight.bold,
+                          decoration: TextDecoration.none,
+                        ),
+                      ),
+                    ),
+
+                    /// MENIT
+                    Expanded(
+                      child: CupertinoPicker.builder(
+                        scrollController: FixedExtentScrollController(
+                          initialItem: selectedMinute,
+                        ),
+                        itemExtent: 55,
+                        diameterRatio: 1.3,
+                        squeeze: 1.15,
+                        useMagnifier: true,
+                        magnification: 1.15,
+                        selectionOverlay: Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: AppColors.accent.withOpacity(.15),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: AppColors.accent.withOpacity(.35),
+                            ),
+                          ),
+                        ),
+
+                        childCount: 60,
+
+                        onSelectedItemChanged: (value) {
+                          selectedMinute = value;
+                        },
+
+                        itemBuilder: (_, index) {
+                          return Center(
+                            child: Text(
+                              index.toString().padLeft(2, "0"),
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 30,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xff42454A),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        child: const Text(
+                          "Batal",
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(width: 12),
+
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(
+                            context,
+                            TimeOfDay(
+                              hour: selectedHour,
+                              minute: selectedMinute,
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.accent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        child: const Text(
+                          "Pilih",
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
+  }
+
+  int _toMinutes(TimeOfDay time) {
+    return time.hour * 60 + time.minute;
+  }
+
+  Duration get activeDuration {
+    final open = _toMinutes(openTime);
+    final close = _toMinutes(closeTime);
+
+    // Same Day
+    if (close > open) {
+      return Duration(minutes: close - open);
+    }
+
+    // Cross Day & 24 Hours
+    return Duration(minutes: (24 * 60 - open) + close);
+  }
+
+  String get activeDurationText {
+    final duration = activeDuration;
+
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes % 60;
+
+    if (hours == 24 && minutes == 0) {
+      return "24 jam";
+    }
+
+    if (minutes == 0) {
+      return "$hours jam";
+    }
+
+    return "$hours jam $minutes menit";
+  }
+
+  bool get isNextDay {
+    return _toMinutes(closeTime) <= _toMinutes(openTime);
+  }
+
+  bool get isFullDay {
+    return _toMinutes(closeTime) == _toMinutes(openTime);
+  }
+
+  Future<void> _selectOpenTime() async {
+    final picked = await _showCupertinoTimePicker(openTime);
 
     if (picked != null) {
       setState(() {
@@ -60,10 +317,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
   }
 
   Future<void> _selectCloseTime() async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: closeTime,
-    );
+    final picked = await _showCupertinoTimePicker(closeTime);
 
     if (picked != null) {
       setState(() {
@@ -108,7 +362,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        "Set Schedule",
+                        "Atur Jadwal",
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -132,7 +386,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
             const SizedBox(height: 25),
 
             _timeField(
-              title: "Open Time",
+              title: "Waktu Buka",
               value: _formatTime(openTime),
               onTap: _selectOpenTime,
             ),
@@ -140,7 +394,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
             const SizedBox(height: 18),
 
             _timeField(
-              title: "Close Time",
+              title: "Waktu Tutup",
               value: _formatTime(closeTime),
               onTap: _selectCloseTime,
             ),
@@ -151,7 +405,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
               children: [
                 const Expanded(
                   child: Text(
-                    "Enable Schedule",
+                    "Aktifkan Jadwal",
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w500,
@@ -174,7 +428,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
               children: [
                 const Expanded(
                   child: Text(
-                    "Apply to all days?",
+                    "Terapkan ke semua hari?",
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w500,
@@ -213,7 +467,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
                         ),
                       ),
                       child: const Text(
-                        "CANCEL",
+                        "Batal",
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -236,8 +490,11 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
                           enabled: enabled,
                           applyAllDays: applyAllDays,
                         );
+                        Future.delayed(const Duration(milliseconds: 900), () {
+                          if (!mounted) return;
 
-                        Navigator.pop(context, result);
+                          Navigator.pop(context, result);
+                        });
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.accent,
@@ -247,7 +504,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
                         ),
                       ),
                       child: const Text(
-                        "SAVE",
+                        "Simpan",
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,

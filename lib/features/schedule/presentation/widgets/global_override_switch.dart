@@ -32,7 +32,7 @@ class GlobalOverrideSwitch extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Global Override",
+                  "Jeda Semua Jadwal",
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -41,7 +41,7 @@ class GlobalOverrideSwitch extends StatelessWidget {
                 ),
                 SizedBox(height: 4),
                 Text(
-                  "Pause all scheduled activities",
+                  "Jeda semua jadwal valve",
                   style: TextStyle(
                     color: Colors.white54,
                     fontSize: 12,

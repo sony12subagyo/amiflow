@@ -77,7 +77,7 @@ class DayScheduleCard extends StatelessWidget {
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(
-                              globalOverride ? "PAUSED" : "ACTIVE",
+                              globalOverride ? "Jeda" : "Aktif",
                               style: TextStyle(
                                 color: globalOverride
                                     ? Colors.orange
@@ -124,7 +124,7 @@ class DayScheduleCard extends StatelessWidget {
                           SizedBox(width: 8),
 
                           Text(
-                            "No Active Schedule",
+                            "Tidak ada jadwal",
                             style: TextStyle(
                               color: Colors.white38,
                               fontSize: 13,

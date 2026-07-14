@@ -1,14 +1,20 @@
-import 'package:amiflow/core/navigation/main_screen.dart';
+// lib/core/navigation/my_app.dart
 import 'package:flutter/material.dart';
+import 'package:amiflow/features/auth/presentation/login_page.dart';
+import 'package:amiflow/core/navigation/main_screen.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: const MainScreen(),
+      initialRoute: '/login',
+      routes: {
+        '/login': (_) => const LoginPage(),
+        '/main': (_) => const MainScreen(),
+      },
     );
   }
 }

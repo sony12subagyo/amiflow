@@ -22,21 +22,9 @@ class GatewayBanner extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-
-                Text(
-                  "SELECT ACTIVE GATEWAY",
-                  style: TextStyle(
-                    color: Colors.white54,
-                    fontSize: 11,
-                    letterSpacing: 1.2,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-
                 SizedBox(height: 8),
-
                 Text(
-                  "Choose Gateway to Manage",
+                  "Pilih Gateway Untuk Memantau Node IoT",
                   style: TextStyle(
                     color: AppColors.accentSoft,
                     fontSize: 20,

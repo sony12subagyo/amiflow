@@ -4,7 +4,8 @@ import 'package:amiflow/features/schedule/domain/schedule_day.dart';
 import 'package:amiflow/features/schedule/domain/schedule_result.dart';
 import 'package:amiflow/features/schedule/presentation/schedule_dialog.dart';
 import 'package:amiflow/features/schedule/presentation/widgets/day_schedule_card.dart';
-import 'package:amiflow/features/schedule/presentation/widgets/global%20override_switch.dart';
+import 'package:amiflow/features/schedule/presentation/widgets/global_override_switch.dart';
+import 'package:amiflow/features/schedule/presentation/widgets/schedule_toast.dart';
 import 'package:flutter/material.dart';
 
 class SchedulePage extends StatefulWidget {
@@ -20,9 +21,34 @@ class _SchedulePageState extends State<SchedulePage> {
   final ScheduleApi _api = ScheduleApi();
   List<ScheduleDay> schedules = [];
   bool globalOverride = false;
-
-  bool _loading = true; // <-- BARU
+  bool _loading = true;
   String? _error;
+
+  int _toMinutes(String time) {
+    final parts = time.split(":");
+    return int.parse(parts[0]) * 60 + int.parse(parts[1]);
+  }
+
+  String _durationText(String start, String end) {
+    final open = _toMinutes(start);
+    final close = _toMinutes(end);
+
+    int minutes;
+    if (close > open) {
+      minutes = close - open;
+    } else if (close == open) {
+      minutes = 24 * 60;
+    } else {
+      minutes = (24 * 60 - open) + close;
+    }
+
+    final hour = minutes ~/ 60;
+    final minute = minutes % 60;
+
+    if (minute == 0) return "$hour jam";
+    return "$hour jam $minute menit";
+  }
+
   @override
   void initState() {
     super.initState();
@@ -37,7 +63,6 @@ class _SchedulePageState extends State<SchedulePage> {
     try {
       final dataServer = await _api.fetchSchedules(widget.nodeId);
 
-      // Mulai dengan 7 hari kosong
       final hariList = [
         'Senin',
         'Selasa',
@@ -48,12 +73,9 @@ class _SchedulePageState extends State<SchedulePage> {
         'Minggu',
       ];
       final lengkap = hariList.map((namaHari) {
-        // cari apakah hari ini ada di data server
         final adaDiServer = dataServer.where((s) => s.day == namaHari);
-        if (adaDiServer.isNotEmpty) {
-          return adaDiServer.first; // pakai data dari server
-        }
-        return ScheduleDay(day: namaHari); // default: nonaktif
+        if (adaDiServer.isNotEmpty) return adaDiServer.first;
+        return ScheduleDay(day: namaHari);
       }).toList();
 
       setState(() {
@@ -74,7 +96,6 @@ class _SchedulePageState extends State<SchedulePage> {
   ) async {
     try {
       if (result.applyAllDays) {
-        // kirim untuk semua hari
         for (final item in schedules) {
           await _api.saveSchedule(
             nodeId: widget.nodeId,
@@ -85,7 +106,6 @@ class _SchedulePageState extends State<SchedulePage> {
           );
         }
       } else {
-        // kirim satu hari yang diubah
         await _api.saveSchedule(
           nodeId: widget.nodeId,
           hari: schedule.day,
@@ -123,7 +143,6 @@ class _SchedulePageState extends State<SchedulePage> {
                     onPressed: () => Navigator.pop(context),
                     icon: const Icon(Icons.arrow_back, color: Colors.white),
                   ),
-
                   const Text(
                     "AMIFLOW",
                     style: TextStyle(
@@ -132,13 +151,7 @@ class _SchedulePageState extends State<SchedulePage> {
                       fontSize: 18,
                     ),
                   ),
-
                   const Spacer(),
-
-                  // IconButton(
-                  //   onPressed: () {},
-                  //   icon: const Icon(Icons.refresh, color: Colors.white70),
-                  // ),
                 ],
               ),
             ),
@@ -151,7 +164,11 @@ class _SchedulePageState extends State<SchedulePage> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(_error!, textAlign: TextAlign.center),
+                          Text(
+                            _error!,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(color: Colors.white54),
+                          ),
                           const SizedBox(height: 12),
                           ElevatedButton(
                             onPressed: _loadSchedules,
@@ -164,25 +181,21 @@ class _SchedulePageState extends State<SchedulePage> {
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       children: [
                         const Text(
-                          "Valve Schedule",
+                          "Jadwal Valve",
                           style: TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
                             fontSize: 26,
                           ),
                         ),
-
                         const SizedBox(height: 6),
-
                         const Text(
-                          "Configure weekly automated flow routines.",
+                          "Konfigurasikan rutinitas aliran otomatis mingguan.",
                           style: TextStyle(color: Colors.white54),
                         ),
-
                         const SizedBox(height: 24),
 
                         ...schedules.asMap().entries.map((entry) {
-                          final index = entry.key;
                           final schedule = entry.value;
 
                           return Padding(
@@ -193,7 +206,6 @@ class _SchedulePageState extends State<SchedulePage> {
                               globalOverride: globalOverride,
                               startTime: schedule.startTime,
                               endTime: schedule.endTime,
-
                               onTap: () async {
                                 final ScheduleResult? result =
                                     await showDialog<ScheduleResult>(
@@ -205,7 +217,7 @@ class _SchedulePageState extends State<SchedulePage> {
                                       ),
                                     );
                                 if (result != null) {
-                                  // 1) Perbarui tampilan lokal (seperti semula)
+                                  // 1) Perbarui tampilan lokal
                                   setState(() {
                                     if (result.applyAllDays) {
                                       for (final item in schedules) {
@@ -228,8 +240,29 @@ class _SchedulePageState extends State<SchedulePage> {
                                     }
                                   });
 
-                                  // 2) Kirim perubahan ke server
+                                  // 2) Kirim ke server
                                   await _simpanKeServer(result, schedule);
+
+                                  // 3) Toast konfirmasi
+                                  Future.delayed(
+                                    const Duration(milliseconds: 300),
+                                    () {
+                                      if (!mounted) return;
+                                      if (result.enabled) {
+                                        ScheduleToast.show(
+                                          context,
+                                          message:
+                                              "Valve aktif selama ${_durationText(result.startTime, result.endTime)}",
+                                        );
+                                      } else {
+                                        ScheduleToast.show(
+                                          context,
+                                          message:
+                                              "Jadwal ${schedule.day} berhasil dinonaktifkan",
+                                        );
+                                      }
+                                    },
+                                  );
                                 }
                               },
                             ),

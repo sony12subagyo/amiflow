@@ -77,7 +77,7 @@ class _GatewayPageState extends State<GatewayPage> {
       body: SafeArea(
         child: Column(
           children: [
-            const AmiflowHeader(trailingIcon: Icons.settings_input_antenna),
+            const AmiflowHeader(),
             const GatewayBanner(),
             const SizedBox(height: 20),
             Expanded(
