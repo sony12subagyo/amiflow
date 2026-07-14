@@ -128,7 +128,7 @@ class _GatewayPageState extends State<GatewayPage> {
         crossAxisCount: 2,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
-        mainAxisExtent: 190,
+        mainAxisExtent: 170,
       ),
 
       itemBuilder: (context, index) {
