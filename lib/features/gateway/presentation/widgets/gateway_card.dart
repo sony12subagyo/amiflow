@@ -7,12 +7,14 @@ class GatewayCard extends StatelessWidget {
   final Gateway gateway;
   final VoidCallback? onTap;
   final VoidCallback? onDelete;
+  final bool isSelected;
 
   const GatewayCard({
     super.key,
     required this.gateway,
     this.onTap,
     this.onDelete,
+    required this.isSelected,
   });
 
   @override
@@ -26,16 +28,15 @@ class GatewayCard extends StatelessWidget {
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: gateway.isSelected
-                ? AppColors.accent
-                : Colors.white12,
-            width: gateway.isSelected ? 1.6 : 1,
+            color: isSelected ? AppColors.accent : Colors.white12,
+
+            width: isSelected ? 2 : 1,
           ),
-          boxShadow: gateway.isSelected
+          boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: AppColors.accent.withValues(alpha: 0.25),
-                    blurRadius: 12,
+                    color: AppColors.accent.withOpacity(.22),
+                    blurRadius: 18,
                     spreadRadius: 1,
                   ),
                 ]
@@ -51,14 +52,14 @@ class GatewayCard extends StatelessWidget {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: gateway.isSelected
+                    color: isSelected
                         ? AppColors.accent.withValues(alpha: 0.15)
                         : Colors.white10,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
                     Icons.router,
-                    color: gateway.isSelected
+                    color: isSelected
                         ? AppColors.accent
                         : Colors.white70,
                     size: 20,
@@ -86,10 +87,7 @@ class GatewayCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               gateway.gatewayCode,
-              style: const TextStyle(
-                color: Colors.white54,
-                fontSize: 11,
-              ),
+              style: const TextStyle(color: Colors.white54, fontSize: 11),
             ),
           ],
         ),

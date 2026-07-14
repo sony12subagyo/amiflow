@@ -20,7 +20,8 @@ class GatewayPage extends StatefulWidget {
 
 class _GatewayPageState extends State<GatewayPage> {
   final GatewayApi _api = GatewayApi(); // <-- BARU
-  List<Gateway> _gateways = []; // mulai kosong
+  List<Gateway> _gateways = [];
+  String? _selectedGatewayId; // mulai kosong
   bool _loading = true; // sedang memuat?
   String? _error; // pesan error (kalau ada)
 
@@ -173,7 +174,12 @@ class _GatewayPageState extends State<GatewayPage> {
 
         return GatewayCard(
           gateway: gateway,
+          isSelected: gateway.id == _selectedGatewayId,
           onTap: () {
+            setState(() {
+              _selectedGatewayId = gateway.id;
+            });
+
             Navigator.push(
               context,
               MaterialPageRoute(
