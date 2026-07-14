@@ -1,7 +1,8 @@
 // lib/features/auth/presentation/login_page.dart
 import 'package:flutter/material.dart';
 import 'package:amiflow/core/theme/app_colors.dart';
-import 'package:amiflow/features/auth/data/dummy_auth.dart';
+import 'package:amiflow/features/auth/data/auth_api.dart';
+import 'package:amiflow/core/auth/token_storage.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -13,6 +14,7 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final _identityController = TextEditingController();
   final _secretController = TextEditingController();
+  final AuthApi _authApi = AuthApi();
   bool _isLoading = false;
   bool _obscurePassword = true;
   String? _errorMessage;
@@ -30,24 +32,29 @@ class _LoginPageState extends State<LoginPage> {
       _errorMessage = null;
     });
 
-    // Simulasi delay network
-    await Future.delayed(const Duration(milliseconds: 1200));
+    try {
+      final email = _identityController.text.trim();
+      final password = _secretController.text.trim();
 
-    final identity = _identityController.text.trim();
-    final secret = _secretController.text.trim();
+      final token = await _authApi.login(email, password); // panggil backend
+      TokenStorage.save(token); // simpan token (di memori)
 
-    if (identity == DummyAuth.email && secret == DummyAuth.password) {
       if (!mounted) return;
-      Navigator.pushReplacementNamed(context, '/main');
-    } else {
+      Navigator.pushReplacementNamed(
+        context,
+        '/main',
+      ); // masuk ke halaman utama
+    } catch (e) {
       setState(() {
-        _errorMessage = 'Invalid identity or secret key';
+        _errorMessage = e.toString().replaceFirst('Exception: ', '');
       });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
-
-    setState(() {
-      _isLoading = false;
-    });
   }
 
   @override
@@ -150,12 +157,19 @@ class _LoginPageState extends State<LoginPage> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.error_outline, color: Colors.redAccent, size: 18),
+                  const Icon(
+                    Icons.error_outline,
+                    color: Colors.redAccent,
+                    size: 18,
+                  ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       _errorMessage!,
-                      style: const TextStyle(color: Colors.redAccent, fontSize: 12),
+                      style: const TextStyle(
+                        color: Colors.redAccent,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
                 ],
@@ -195,7 +209,10 @@ class _LoginPageState extends State<LoginPage> {
         prefixIcon: Icon(icon, color: Colors.white38, size: 20),
         filled: true,
         fillColor: AppColors.surfaceAlt,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Colors.white12),
@@ -227,7 +244,10 @@ class _LoginPageState extends State<LoginPage> {
         ),
         filled: true,
         fillColor: AppColors.surfaceAlt,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Colors.white12),
@@ -248,7 +268,9 @@ class _LoginPageState extends State<LoginPage> {
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.accent,
           foregroundColor: Colors.black,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           elevation: 0,
         ),
         onPressed: _isLoading ? null : _login,

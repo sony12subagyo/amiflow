@@ -75,14 +75,6 @@ class _AddNodeDialogState extends State<AddNodeDialog> {
 
             const SizedBox(height: 18),
 
-            _label("Nama Node"),
-
-            const SizedBox(height: 8),
-
-            _field(controller: nodeNameController, hint: "Masukan Nama Node"),
-
-            const SizedBox(height: 18),
-
             _label("Nama Pemilik"),
 
             const SizedBox(height: 8),
