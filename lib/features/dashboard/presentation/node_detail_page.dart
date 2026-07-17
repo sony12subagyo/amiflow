@@ -1,6 +1,7 @@
 // lib/features/dashboard/presentation/node_detail_page.dart
 import 'package:amiflow/features/dashboard/data/dummy_chart.dart';
 import 'package:amiflow/features/dashboard/data/node_api.dart';
+import 'package:amiflow/features/dashboard/domain/edit_node_result.dart';
 import 'package:amiflow/features/dashboard/domain/entities/chart_filter.dart';
 import 'package:amiflow/features/dashboard/presentation/widgets/chart_detail_sheet.dart';
 import 'package:amiflow/features/dashboard/presentation/widgets/edit_node_bottom_sheet.dart';
@@ -24,12 +25,14 @@ class NodeDetailPage extends StatefulWidget {
 class _NodeDetailPageState extends State<NodeDetailPage> {
   final NodeApi _api = NodeApi(); // tambahkan di atas, sebagai field kelas
   late bool _valveOpen;
+  late Node _node;
 
   @override
-  void initState() {
-    super.initState();
-    _valveOpen = widget.node.valveOpen; // status awal dari server
-  }
+void initState() {
+  super.initState();
+  _node = widget.node;        // isi dulu _node
+  _valveOpen = _node.valveOpen; // baru ambil valvenya
+}
 
   double _flowRate = 12.8;
   ChartFilter _selectedFilter = ChartFilter.day;
@@ -51,7 +54,7 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
     });
 
     try {
-      final hasilServer = await _api.updateValve(widget.node.id, statusBaru);
+      final hasilServer = await _api.updateValve(_node.id, statusBaru);
       // sinkronkan dengan status yang dikonfirmasi server
       setState(() {
         _valveOpen = hasilServer;
@@ -73,19 +76,45 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
   }
 
   Future<void> _deleteNode() async {
-    final confirmed = await showRemoveNodeDialog(context, widget.node.id);
+    final confirmed = await showRemoveNodeDialog(context, _node.id);
     if (!confirmed) return;
     if (!mounted) return;
     Navigator.pop(context, true);
   }
 
   Future<void> _showEditNodeSheet() async {
-    await showModalBottomSheet(
+    final result = await showModalBottomSheet<EditNodeResult>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => EditNodeBottomSheet(node: widget.node),
+      builder: (_) => EditNodeBottomSheet(node: _node),
     );
+
+    if (result == null) return;
+
+    try {
+      final updatedNode = await _api.updateNode(
+        nodeId: _node.id,
+        owner: result.owner,
+        totalUsers: result.totalUsers,
+      );
+
+      setState(() {
+        _node = updatedNode;
+      });
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Node berhasil diperbarui")));
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Gagal mengubah node\n$e")));
+    }
   }
 
   @override
@@ -115,7 +144,7 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
   }
 
   Widget _buildHeader() {
-    final node = widget.node;
+    final node = _node;
     return Row(
       children: [
         IconButton(
@@ -142,6 +171,10 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
               const SizedBox(height: 4),
               Text(
                 'Pemilik : ${node.owner}',
+                style: const TextStyle(color: Colors.white60, fontSize: 12),
+              ),
+              Text(
+                'Pengguna : ${node.totalUsers} Orang',
                 style: const TextStyle(color: Colors.white60, fontSize: 12),
               ),
               Text(
@@ -194,7 +227,7 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
   }
 
   Widget _buildFlowCard() {
-    final node = widget.node;
+    final node = _node;
 
     Color statusColor;
 
@@ -423,9 +456,7 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
             /// masuk ke halaman schedule
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (_) => SchedulePage(nodeId: widget.node.id),
-              ),
+              MaterialPageRoute(builder: (_) => SchedulePage(nodeId: _node.id)),
             );
           },
         ),

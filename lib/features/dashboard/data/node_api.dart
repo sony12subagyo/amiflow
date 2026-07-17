@@ -91,4 +91,31 @@ class NodeApi {
       throw Exception('Gagal mengubah valve (${response.statusCode})');
     }
   }
+
+  Future<Node> updateNode({
+  required String nodeId,
+  required String owner,
+  required int totalUsers,
+}) async {
+  final url = Uri.parse('${AppConfig.baseUrl}/nodes/$nodeId');
+
+  final response = await http.put(
+    url,
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      'ngrok-skip-browser-warning': 'true',
+    },
+    body: jsonEncode({
+      'nama_pemilik': owner,
+      'jumlah_penghuni': totalUsers,
+    }),
+  );
+
+  if (response.statusCode == 200) {
+    return Node.fromJson(jsonDecode(response.body));
+  } else {
+    throw Exception('Gagal mengubah node (${response.statusCode})');
+  }
+}
 }
