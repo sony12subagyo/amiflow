@@ -18,6 +18,8 @@ class _EditProfileBottomSheetState extends State<EditProfileBottomSheet> {
 
   bool _isLoading = false;
 
+  String? _passwordError;
+  String? _confirmPasswordError;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
@@ -35,6 +37,24 @@ class _EditProfileBottomSheetState extends State<EditProfileBottomSheet> {
     _confirmPasswordController.dispose();
 
     super.dispose();
+  }
+
+  void _validatePassword() {
+    final password = _passwordController.text;
+    final confirm = _confirmPasswordController.text;
+
+    setState(() {
+      _passwordError = null;
+      _confirmPasswordError = null;
+
+      if (password.isNotEmpty && password.length < 8) {
+        _passwordError = "Password minimal 8 karakter";
+      }
+
+      if (confirm.isNotEmpty && password != confirm) {
+        _confirmPasswordError = "Konfirmasi password tidak sama";
+      }
+    });
   }
 
   Future<void> _saveProfile() async {
@@ -85,108 +105,191 @@ class _EditProfileBottomSheetState extends State<EditProfileBottomSheet> {
     }
   }
 
+  InputDecoration _buildInputDecoration({
+    required String label,
+    required IconData icon,
+    Widget? suffixIcon,
+    String? errorText,
+  }) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: const TextStyle(color: Colors.white70),
+
+      errorText: errorText,
+
+      filled: true,
+      fillColor: AppColors.surface,
+
+      prefixIcon: Icon(icon, color: AppColors.accent),
+
+      suffixIcon: suffixIcon,
+
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide.none,
+      ),
+
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: AppColors.accent, width: 2),
+      ),
+
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: Colors.red),
+      ),
+
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: Colors.red, width: 2),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Padding(
-        padding: EdgeInsets.only(
-          left: 24,
-          right: 24,
-          top: 24,
-          bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Edit Profile',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-              ),
-
-              const SizedBox(height: 24),
-
-              TextField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Nama',
-                  prefixIcon: Icon(Icons.person_outline),
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              TextField(
-                controller: _passwordController,
-                obscureText: _obscurePassword,
-                decoration: InputDecoration(
-                  labelText: 'Password Baru',
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility_off
-                          : Icons.visibility,
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.45),
+            blurRadius: 20,
+            offset: const Offset(0, -6),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: AnimatedPadding(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+          padding: EdgeInsets.fromLTRB(
+            24,
+            24,
+            24,
+            MediaQuery.of(context).viewInsets.bottom + 24,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Center(
+                  child: Container(
+                    width: 45,
+                    height: 5,
+                    margin: const EdgeInsets.only(bottom: 20),
+                    decoration: BoxDecoration(
+                      color: Colors.white24,
+                      borderRadius: BorderRadius.circular(20),
                     ),
-                    onPressed: () {
-                      setState(() {
-                        _obscurePassword = !_obscurePassword;
-                      });
-                    },
                   ),
                 ),
-              ),
 
-              const SizedBox(height: 20),
+                const Text(
+                  'Edit Profile',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
 
-              TextField(
-                controller: _confirmPasswordController,
-                obscureText: _obscureConfirmPassword,
-                decoration: InputDecoration(
-                  labelText: 'Konfirmasi Password',
-                  prefixIcon: const Icon(Icons.lock_reset),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscureConfirmPassword
-                          ? Icons.visibility_off
-                          : Icons.visibility,
+                const SizedBox(height: 24),
+
+                TextField(
+                  controller: _nameController,
+                  style: const TextStyle(color: Colors.white),
+                  cursorColor: AppColors.accent,
+                  decoration: _buildInputDecoration(
+                    label: 'Nama',
+                    icon: Icons.person_outline,
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                TextField(
+                  controller: _passwordController,
+                  cursorColor: AppColors.accent,
+                  onChanged: (_) => _validatePassword(),
+                  obscureText: _obscurePassword,
+                  decoration: _buildInputDecoration(
+                    label: 'Password Baru',
+                    icon: Icons.lock_outline,
+                    errorText: _passwordError,
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                        color: AppColors.accent,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
                     ),
-                    onPressed: () {
-                      setState(() {
-                        _obscureConfirmPassword = !_obscureConfirmPassword;
-                      });
-                    },
                   ),
                 ),
-              ),
 
-              const SizedBox(height: 32),
+                const SizedBox(height: 20),
 
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _saveProfile,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.accent,
-                    foregroundColor: Colors.black,
+                TextField(
+                  controller: _confirmPasswordController,
+                  onChanged: (_) => _validatePassword(),
+                  style: const TextStyle(color: Colors.white),
+                  cursorColor: AppColors.accent,
+                  obscureText: _obscureConfirmPassword,
+                  decoration: InputDecoration(
+                    labelText: 'Konfirmasi Password',
+                    errorText: _confirmPasswordError,
+                    prefixIcon: const Icon(Icons.lock_reset),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscureConfirmPassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscureConfirmPassword = !_obscureConfirmPassword;
+                        });
+                      },
+                    ),
                   ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 22,
-                          width: 22,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.5,
-                            color: Colors.black,
+                ),
+
+                const SizedBox(height: 32),
+
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: _isLoading ? null : _saveProfile,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.accent,
+                      foregroundColor: Colors.black,
+                    ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 22,
+                            width: 22,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              color: Colors.black,
+                            ),
+                          )
+                        : const Text(
+                            "SIMPAN",
+                            style: TextStyle(fontWeight: FontWeight.bold),
                           ),
-                        )
-                      : const Text(
-                          "SIMPAN",
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
