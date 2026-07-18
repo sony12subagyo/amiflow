@@ -5,11 +5,13 @@ import 'package:amiflow/core/theme/app_colors.dart';
 class AmiflowHeader extends StatelessWidget {
   final VoidCallback? onNotificationTap;
   final int notificationCount;
+  final bool showNotification;
 
   const AmiflowHeader({
     super.key,
     this.onNotificationTap,
     this.notificationCount = 5,
+    this.showNotification = true,
   });
 
   @override
@@ -50,53 +52,57 @@ class AmiflowHeader extends StatelessWidget {
               ],
             ),
           ),
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceLight,
-                  borderRadius: BorderRadius.circular(50),
-                ),
-                child: IconButton(
-                  splashRadius: 24,
-                  onPressed: onNotificationTap,
-                  icon: const Icon(
-                    Icons.notifications_none_rounded,
-                    color: Colors.white,
-                    size: 24,
+          if (showNotification)
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceLight,
+                    borderRadius: BorderRadius.circular(50),
+                  ),
+                  child: IconButton(
+                    splashRadius: 24,
+                    onPressed: onNotificationTap,
+                    icon: const Icon(
+                      Icons.notifications_none_rounded,
+                      color: Colors.white,
+                      size: 24,
+                    ),
                   ),
                 ),
-              ),
 
-              if (notificationCount > 0)
-                Positioned(
-                  right: -2,
-                  top: -2,
-                  child: Container(
-                    width: 20,
-                    height: 20,
-                    decoration: BoxDecoration(
-                      color: const Color(0xffFF4D4F),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.surface, width: 1.5),
-                    ),
-                    child: Center(
-                      child: Text(
-                        notificationCount > 9 ? "9+" : "$notificationCount",
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
+                if (notificationCount > 0)
+                  Positioned(
+                    right: -2,
+                    top: -2,
+                    child: Container(
+                      width: 20,
+                      height: 20,
+                      decoration: BoxDecoration(
+                        color: const Color(0xffFF4D4F),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: AppColors.surface,
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          notificationCount > 9 ? "9+" : "$notificationCount",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-            ],
-          ),
+              ],
+            ),
         ],
       ),
     );

@@ -1,4 +1,6 @@
 // lib/features/profile/presentation/profile_page.dart
+import 'package:amiflow/core/auth/current_user.dart';
+import 'package:amiflow/features/profile/presentation/edit_profile_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:amiflow/core/theme/app_colors.dart';
 import 'package:amiflow/features/profile/data/dummy_profile.dart';
@@ -6,11 +8,17 @@ import 'package:amiflow/features/profile/presentation/widgets/profile_badge.dart
 import 'package:amiflow/features/profile/presentation/widgets/profile_tile.dart';
 import 'package:amiflow/shared/widgets/amiflow_header.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
 
   @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  @override
   Widget build(BuildContext context) {
+    final user = CurrentUser.user;
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -25,10 +33,10 @@ class ProfilePage extends StatelessWidget {
             children: [
               const AmiflowHeader(),
               const SizedBox(height: 40),
-              _buildAvatar(),
+              _buildAvatar(user?.name ?? "-"),
               const SizedBox(height: 20),
-              const Text(
-                ProfileData.name,
+              Text(
+                user?.name ?? "-",
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 24,
@@ -37,7 +45,7 @@ class ProfilePage extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               const Text(
-                ProfileData.role,
+                "Administrator",
                 style: TextStyle(color: Colors.white54),
               ),
               const SizedBox(height: 15),
@@ -58,8 +66,16 @@ class ProfilePage extends StatelessWidget {
               ProfileTile(
                 icon: Icons.person,
                 title: 'Edit Profile',
-                onTap: () {
-                  /* TODO: buka edit profile */
+                onTap: () async {
+                  final result = await showModalBottomSheet<bool>(
+                    context: context,
+                    isScrollControlled: true,
+                    builder: (_) => const EditProfileBottomSheet(),
+                  );
+
+                  if (result == true && mounted) {
+                    setState(() {});
+                  }
                 },
               ),
               const SizedBox(height: 30),
@@ -76,7 +92,19 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildAvatar() {
+  String _getInitials(String name) {
+    if (name.trim().isEmpty) return "?";
+
+    final parts = name.trim().split(RegExp(r'\s+'));
+
+    if (parts.length == 1) {
+      return parts.first[0].toUpperCase();
+    }
+
+    return (parts.first[0] + parts.last[0]).toUpperCase();
+  }
+
+  Widget _buildAvatar(String name) {
     return Stack(
       children: [
         Container(
@@ -88,7 +116,17 @@ class ProfilePage extends StatelessWidget {
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(60),
-            child: Image.network(ProfileData.avatarUrl, fit: BoxFit.cover),
+            child: Center(
+              child: Text(
+                _getInitials(name),
+                style: const TextStyle(
+                  color: AppColors.accent,
+                  fontSize: 42,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 2,
+                ),
+              ),
+            ),
           ),
         ),
         Positioned(

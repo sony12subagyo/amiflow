@@ -58,20 +58,19 @@ class ChartBottomSheet extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 28),
-
-            _buildItem(
-              Icons.water_drop_outlined,
-              "Penggunaan Air",
-              "${usage.toStringAsFixed(2)} m³",
-            ),
-
-            const SizedBox(height: 16),
+            const SizedBox(height: 15),
 
             _buildItem(
               Icons.pie_chart_outline,
               "Kontribusi",
               "${percentage.toStringAsFixed(1)} %",
+            ),
+            const SizedBox(height: 16),
+
+            _buildItem(
+              Icons.water_drop_outlined,
+              "Penggunaan Air",
+              "${usage.toStringAsFixed(2)} m³",
             ),
 
             const SizedBox(height: 16),

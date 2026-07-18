@@ -1,4 +1,5 @@
 // lib/features/auth/presentation/login_page.dart
+import 'package:amiflow/core/auth/current_user.dart';
 import 'package:flutter/material.dart';
 import 'package:amiflow/core/theme/app_colors.dart';
 import 'package:amiflow/features/auth/data/auth_api.dart';
@@ -36,8 +37,12 @@ class _LoginPageState extends State<LoginPage> {
       final email = _identityController.text.trim();
       final password = _secretController.text.trim();
 
-      final token = await _authApi.login(email, password); // panggil backend
-      TokenStorage.save(token); // simpan token (di memori)
+      final result = await _authApi.login(email, password);
+
+      TokenStorage.save(result.token); // simpan token (di memori)
+      CurrentUser.user = result.user;
+      print(result.user.name);
+      print(result.user.email);
 
       if (!mounted) return;
       Navigator.pushReplacementNamed(

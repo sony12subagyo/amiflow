@@ -35,7 +35,7 @@ class GatewayBanner extends StatelessWidget {
                 SizedBox(height: 6),
 
                 Text(
-                  "Select one gateway to monitor\nconnected IoT nodes.",
+                  "Gateway yang dipilih akan menampilkan data dari node IoT yang terhubung",
                   style: TextStyle(
                     color: Colors.white60,
                     fontSize: 12,

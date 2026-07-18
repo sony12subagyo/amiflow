@@ -296,7 +296,7 @@ void initState() {
                 const SizedBox(width: 8),
 
                 const Text(
-                  "Penggunaan Normal",
+                  "Penggunaan Per-Bulan",
                   style: TextStyle(color: Colors.white70),
                 ),
 

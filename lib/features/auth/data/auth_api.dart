@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:amiflow/core/config/app_config.dart';
+import 'package:amiflow/features/auth/domain/login_result.dart';
 
 class AuthApi {
-  Future<String> login(String email, String password) async {
+  Future<LoginResult> login(String email, String password) async {
     final url = Uri.parse('${AppConfig.baseUrl}/login');
 
     final response = await http.post(
@@ -18,7 +19,7 @@ class AuthApi {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      return data['token'] as String; // kembalikan token
+      return LoginResult.fromJson(data);
     } else if (response.statusCode == 401) {
       throw Exception('Email atau password salah');
     } else {
