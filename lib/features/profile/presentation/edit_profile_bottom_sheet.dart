@@ -110,6 +110,7 @@ class _EditProfileBottomSheetState extends State<EditProfileBottomSheet> {
     required IconData icon,
     Widget? suffixIcon,
     String? errorText,
+    String? hint,
   }) {
     return InputDecoration(
       labelText: label,
@@ -123,6 +124,9 @@ class _EditProfileBottomSheetState extends State<EditProfileBottomSheet> {
       prefixIcon: Icon(icon, color: AppColors.accent),
 
       suffixIcon: suffixIcon,
+
+      hintStyle: const TextStyle(color: Colors.white70),
+      hintText: hint,
 
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
@@ -212,6 +216,11 @@ class _EditProfileBottomSheetState extends State<EditProfileBottomSheet> {
 
                 TextField(
                   controller: _passwordController,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w500,
+                  ),
                   cursorColor: AppColors.accent,
                   onChanged: (_) => _validatePassword(),
                   obscureText: _obscurePassword,
@@ -239,19 +248,32 @@ class _EditProfileBottomSheetState extends State<EditProfileBottomSheet> {
 
                 TextField(
                   controller: _confirmPasswordController,
+
                   onChanged: (_) => _validatePassword(),
-                  style: const TextStyle(color: Colors.white),
+
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w500,
+                  ),
+
                   cursorColor: AppColors.accent,
+
                   obscureText: _obscureConfirmPassword,
-                  decoration: InputDecoration(
-                    labelText: 'Konfirmasi Password',
+
+                  decoration: _buildInputDecoration(
+                    label: 'Konfirmasi Password',
+                    icon: Icons.lock_reset,
                     errorText: _confirmPasswordError,
-                    prefixIcon: const Icon(Icons.lock_reset),
+                    hint: 'Ulangi password',
                     suffixIcon: IconButton(
+                      splashColor: Colors.transparent,
+                      highlightColor: Colors.transparent,
                       icon: Icon(
                         _obscureConfirmPassword
                             ? Icons.visibility_off
                             : Icons.visibility,
+                        color: AppColors.accent,
                       ),
                       onPressed: () {
                         setState(() {

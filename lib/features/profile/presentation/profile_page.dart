@@ -31,7 +31,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ), // 100 = ruang untuk pill
           child: Column(
             children: [
-              const AmiflowHeader(),
+              AmiflowHeader(showNotification: false),
               const SizedBox(height: 40),
               _buildAvatar(user?.name ?? "-"),
               const SizedBox(height: 20),
