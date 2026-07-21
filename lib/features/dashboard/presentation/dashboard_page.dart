@@ -87,15 +87,17 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Future<void> _openDetail(Node node) async {
-    final deleted = await Navigator.push<bool>(
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => NodeDetailPage(node: node)),
     );
 
-    if (deleted == true) {
+    if (result == true) {
+      // Delete
       try {
-        await _api.deleteNode(node.id); // hapus di server
-        _removeNode(node); // baru dari tampilan
+        await _api.deleteNode(node.id);
+        _removeNode(node);
+
         if (!mounted) return;
         ScaffoldMessenger.of(
           context,
@@ -106,6 +108,19 @@ class _DashboardPageState extends State<DashboardPage> {
           context,
         ).showSnackBar(const SnackBar(content: Text('Gagal menghapus node')));
       }
+    } else if (result is Node) {
+      // Edit
+      setState(() {
+        final index = _nodes.indexWhere((n) => n.id == result.id);
+        if (index != -1) {
+          _nodes[index] = result;
+        }
+
+        final filteredIndex = _filtered.indexWhere((n) => n.id == result.id);
+        if (filteredIndex != -1) {
+          _filtered[filteredIndex] = result;
+        }
+      });
     }
   }
 

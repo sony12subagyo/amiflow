@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:amiflow/features/dashboard/domain/entities/klasifikasi.dart';
 import 'package:http/http.dart' as http;
 import 'package:amiflow/core/config/app_config.dart';
 import 'package:amiflow/features/dashboard/domain/entities/node.dart';
@@ -71,6 +72,33 @@ class NodeApi {
     }
   }
 
+  Future<Node> updateNode({
+    required String id,
+    required String namaPemilik,
+    required int jumlahPenghuni,
+  }) async {
+    final url = Uri.parse('${AppConfig.baseUrl}/nodes/$id');
+
+    final response = await http.put(
+      url,
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
+      },
+      body: jsonEncode({
+        'nama_pemilik': namaPemilik,
+        'jumlah_penghuni': jumlahPenghuni,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return Node.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception('Gagal mengubah node (${response.statusCode})');
+    }
+  }
+
   Future<bool> updateValve(String nodeId, bool open) async {
     final url = Uri.parse('${AppConfig.baseUrl}/nodes/$nodeId/valve');
 
@@ -92,30 +120,38 @@ class NodeApi {
     }
   }
 
-  Future<Node> updateNode({
-  required String nodeId,
-  required String owner,
-  required int totalUsers,
-}) async {
-  final url = Uri.parse('${AppConfig.baseUrl}/nodes/$nodeId');
+  /// Ambil hasil klasifikasi Hemat/Normal/Boros dari KlasifikasiController.
+  ///
+  /// CATATAN: path endpoint di bawah ini ASUMSI ('/klasifikasi/{nodeId}/{tahun}/{bulan}').
+  /// Cek routes/api.php di Laravel untuk path aslinya, sesuaikan jika beda.
+  ///
+  /// Backend bisa balas 200 (lengkap), 202 (ML belum aktif, < 30 hari data),
+  /// atau 400 (data < 2 baris) -- ketiganya tetap di-parse jadi [Klasifikasi],
+  /// bukan dilempar sebagai error, karena ini kondisi valid yang perlu
+  /// ditampilkan ke user, bukan kegagalan jaringan.
+  Future<Klasifikasi> fetchKlasifikasi(
+    String nodeId,
+    int tahun,
+    int bulan,
+  ) async {
+    final url = Uri.parse(
+      '${AppConfig.baseUrl}/klasifikasi/$nodeId/$tahun/$bulan',
+    );
 
-  final response = await http.put(
-    url,
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-      'ngrok-skip-browser-warning': 'true',
-    },
-    body: jsonEncode({
-      'nama_pemilik': owner,
-      'jumlah_penghuni': totalUsers,
-    }),
-  );
+    final response = await http.get(
+      url,
+      headers: {
+        'Accept': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
+      },
+    );
 
-  if (response.statusCode == 200) {
-    return Node.fromJson(jsonDecode(response.body));
-  } else {
-    throw Exception('Gagal mengubah node (${response.statusCode})');
+    if (response.statusCode == 200 ||
+        response.statusCode == 202 ||
+        response.statusCode == 400) {
+      return Klasifikasi.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception('Gagal memuat klasifikasi (${response.statusCode})');
+    }
   }
-}
 }

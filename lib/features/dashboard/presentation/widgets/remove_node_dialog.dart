@@ -8,20 +8,20 @@ Future<bool> showRemoveNodeDialog(BuildContext context, String nodeName) async {
       return AlertDialog(
         backgroundColor: AppColors.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Confirm Removal', style: TextStyle(color: Colors.white)),
+        title: const Text('Konfirmasi Penghapus', style: TextStyle(color: Colors.white)),
         content: Text(
-          'Remove $nodeName from network?',
+          'Hapus node $nodeName dari gateway?',
           style: const TextStyle(color: Colors.white70),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: const Text('Batal'),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.danger),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Remove'),
+            child: const Text('Hapus'),
           ),
         ],
       );

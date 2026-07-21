@@ -291,7 +291,7 @@ class _LoginPageState extends State<LoginPage> {
             : const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.login, size: 22),
+                  //Icon(Icons.login, size: 22),
                   SizedBox(width: 10),
                   Text(
                     'LOGIN',

@@ -3,6 +3,7 @@ import 'package:amiflow/features/dashboard/data/dummy_chart.dart';
 import 'package:amiflow/features/dashboard/data/node_api.dart';
 import 'package:amiflow/features/dashboard/domain/edit_node_result.dart';
 import 'package:amiflow/features/dashboard/domain/entities/chart_filter.dart';
+import 'package:amiflow/features/dashboard/domain/entities/klasifikasi.dart';
 import 'package:amiflow/features/dashboard/presentation/widgets/chart_detail_sheet.dart';
 import 'package:amiflow/features/dashboard/presentation/widgets/edit_node_bottom_sheet.dart';
 import 'package:amiflow/features/schedule/presentation/schedule_page.dart';
@@ -24,15 +25,53 @@ class NodeDetailPage extends StatefulWidget {
 
 class _NodeDetailPageState extends State<NodeDetailPage> {
   final NodeApi _api = NodeApi(); // tambahkan di atas, sebagai field kelas
-  late bool _valveOpen;
   late Node _node;
+  late bool _valveOpen;
+
+  // Hasil klasifikasi dari KlasifikasiController. Null selagi belum selesai
+  // di-fetch atau kalau fetch gagal -- tampilan tetap sama, cuma fallback
+  // diam-diam ke nilai lokal di Node (lihat _buildFlowCard).
+  Klasifikasi? _klasifikasi;
 
   @override
-void initState() {
-  super.initState();
-  _node = widget.node;        // isi dulu _node
-  _valveOpen = _node.valveOpen; // baru ambil valvenya
-}
+  void initState() {
+    super.initState();
+
+    _node = widget.node;
+    _valveOpen = _node.valveOpen;
+
+    _loadKlasifikasi();
+  }
+  //IN YANG BENER
+  // Default: bulan berjalan. Ganti di sini kalau nanti ada filter periode.
+  // Future<void> _loadKlasifikasi() async {
+  //   final now = DateTime.now();
+  //   try {
+  //     final hasil = await _api.fetchKlasifikasi(widget.node.id, now.year, now.month);
+  //     if (!mounted) return;
+  //     setState(() {
+  //       _klasifikasi = hasil;
+  //     });
+  //   } catch (e) {
+  //     // Diamkan -- tampilan tetap pakai fallback lokal, tidak mengubah UI.
+  //     debugPrint('Gagal memuat klasifikasi: $e');
+  //   }
+  // }
+
+  //INI NYOBA AJA
+  Future<void> _loadKlasifikasi() async {
+    try {
+      final response = await _api.fetchKlasifikasi(_node.id, 2026, 8);
+
+      if (!mounted) return;
+
+      setState(() {
+        _klasifikasi = response;
+      });
+    } catch (e) {
+      debugPrint('Gagal memuat klasifikasi: $e');
+    }
+  }
 
   double _flowRate = 12.8;
   ChartFilter _selectedFilter = ChartFilter.day;
@@ -94,28 +133,33 @@ void initState() {
 
     try {
       final updatedNode = await _api.updateNode(
-        nodeId: _node.id,
-        owner: result.owner,
-        totalUsers: result.totalUsers,
+        id: _node.id,
+        namaPemilik: result.owner,
+        jumlahPenghuni: result.totalUsers,
       );
 
       setState(() {
         _node = updatedNode;
+        _valveOpen = updatedNode.valveOpen;
       });
 
       if (!mounted) return;
 
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("Node berhasil diperbarui")));
+      ).showSnackBar(const SnackBar(content: Text('Node berhasil diperbarui')));
     } catch (e) {
       if (!mounted) return;
 
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text("Gagal mengubah node\n$e")));
+      ).showSnackBar(SnackBar(content: Text('Gagal memperbarui node\n$e')));
     }
   }
+
+  void _back() {
+  Navigator.pop(context, _node);
+}
 
   @override
   Widget build(BuildContext context) {
@@ -148,17 +192,16 @@ void initState() {
     return Row(
       children: [
         IconButton(
-          onPressed: () => Navigator.pop(context),
-          icon: const Icon(Icons.arrow_back, color: AppColors.accentSoft),
-        ),
+  onPressed: _back,
+  icon: const Icon(
+    Icons.arrow_back,
+    color: AppColors.accentSoft,
+  ),
+),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // const Text(
-              //   'IOT NETWORK',
-              //   style: TextStyle(color: Colors.white54, fontSize: 11),
-              // ),
               const SizedBox(height: 4),
               Text(
                 '${node.id} Detail',
@@ -229,9 +272,16 @@ void initState() {
   Widget _buildFlowCard() {
     final node = _node;
 
+    // Sumber data: hasil KlasifikasiController kalau sudah ada,
+    // fallback ke nilai lokal Node selagi belum selesai fetch / fetch gagal.
+    // Tampilan (layout, label, warna) tetap sama seperti sebelumnya.
+    final String kategori =
+        _klasifikasi?.kategori?.toUpperCase() ?? node.usageStatus;
+    final double totalVolume = _klasifikasi?.konsumsiM3 ?? node.waterUsageM3;
+
     Color statusColor;
 
-    switch (node.usageStatus) {
+    switch (kategori) {
       case "HEMAT":
         statusColor = Colors.greenAccent;
         break;
@@ -264,7 +314,7 @@ void initState() {
           const SizedBox(height: 12),
 
           Text(
-            node.waterUsageM3.toStringAsFixed(2),
+            totalVolume.toStringAsFixed(2),
             style: const TextStyle(
               color: AppColors.accent,
               fontSize: 54,
@@ -296,14 +346,14 @@ void initState() {
                 const SizedBox(width: 8),
 
                 const Text(
-                  "Penggunaan Per-Bulan",
+                  "Penggunaan Normal Perbulan",
                   style: TextStyle(color: Colors.white70),
                 ),
 
                 const Spacer(),
 
                 Text(
-                  "${node.normalUsageM3.toStringAsFixed(2)} m³",
+                  "${node.normalUsageM3.toStringAsFixed(1)} m³",
                   style: const TextStyle(
                     color: AppColors.accent,
                     fontWeight: FontWeight.bold,
@@ -329,7 +379,7 @@ void initState() {
                 const SizedBox(width: 8),
 
                 Text(
-                  node.usageStatus,
+                  kategori,
                   style: TextStyle(
                     color: statusColor,
                     fontWeight: FontWeight.bold,

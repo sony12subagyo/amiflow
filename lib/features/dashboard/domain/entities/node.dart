@@ -53,11 +53,12 @@ class Node {
   ///
   /// Standar:
   /// 1 orang = 60 Liter/hari
+  /// 1 orang = 1800 Liter/bulan
   /// 1000 Liter = 1 m³
   /// ============================================
 
   double get normalUsageM3 {
-    return (totalUsers * 60) / 1000;
+    return (totalUsers * 1800) / 1000;
   }
 
   /// ============================================
