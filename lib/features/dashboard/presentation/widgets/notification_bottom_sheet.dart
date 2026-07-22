@@ -1,5 +1,5 @@
 import 'package:amiflow/core/theme/app_colors.dart';
-import 'package:amiflow/features/dashboard/data/dummy_nodes.dart';
+//import 'package:amiflow/features/dashboard/data/dummy_nodes.dart';
 import 'package:amiflow/features/dashboard/presentation/widgets/ml_alert_dialog.dart';
 import 'package:amiflow/features/dashboard/presentation/widgets/notification_card.dart';
 import 'package:flutter/material.dart';
@@ -9,25 +9,25 @@ class NotificationBottomSheet extends StatelessWidget {
   const NotificationBottomSheet({super.key});
 
   /// Dummy Notification
-  static final List<Map<String, dynamic>> dummyNotifications = [
-    {
-      "node": dummyNodes[0],
-      "description": "Pemborosan selama 3 bulan berturut-turut.",
-      "time": "5 menit lalu",
-    },
+  // static final List<Map<String, dynamic>> dummyNotifications = [
+  //   {
+  //     "node": dummyNodes[0],
+  //     "description": "Pemborosan selama 3 bulan berturut-turut.",
+  //     "time": "5 menit lalu",
+  //   },
 
-    {
-      "node": dummyNodes[3],
-      "description": "Pemborosan selama 3 bulan berturut-turut.",
-      "time": "2 jam lalu",
-    },
+  //   {
+  //     "node": dummyNodes[3],
+  //     "description": "Pemborosan selama 3 bulan berturut-turut.",
+  //     "time": "2 jam lalu",
+  //   },
 
-    {
-      "node": dummyNodes[4],
-      "description": "Pemborosan selama 3 bulan berturut-turut.",
-      "time": "Kemarin",
-    },
-  ];
+  //   {
+  //     "node": dummyNodes[4],
+  //     "description": "Pemborosan selama 3 bulan berturut-turut.",
+  //     "time": "Kemarin",
+  //   },
+  // ];
 
   @override
   Widget build(BuildContext context) {
@@ -79,36 +79,36 @@ class NotificationBottomSheet extends StatelessWidget {
 
           Divider(color: Colors.white.withOpacity(.08), height: 1),
 
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              itemCount: dummyNotifications.length,
-              itemBuilder: (context, index) {
-                final item = dummyNotifications[index];
-                final node = item["node"] as Node;
+          //Expanded(
+            // child: ListView.builder(
+            //   padding: const EdgeInsets.symmetric(vertical: 10),
+            //   itemCount: dummyNotifications.length,
+            //   itemBuilder: (context, index) {
+            //     final item = dummyNotifications[index];
+            //     final node = item["node"] as Node;
 
-                return NotificationCard(
-                  nodeName: node.id,
-                  description: item["description"]!,
-                  time: item["time"]!,
-                  onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (_) => MlAlertDialog(
-                        node: node,
-                        status: item["description"] as String,
-                        recommendations: const [
-                          "Periksa kondisi valve",
-                          "Verifikasi jumlah pengguna",
-                          "Perbarui jumlah pengguna bila diperlukan",
-                        ],
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
-          ),
+            //     return NotificationCard(
+            //       nodeName: node.id,
+            //       description: item["description"]!,
+            //       time: item["time"]!,
+            //       onTap: () {
+            //         showDialog(
+            //           context: context,
+            //           builder: (_) => MlAlertDialog(
+            //             node: node,
+            //             status: item["description"] as String,
+            //             recommendations: const [
+            //               "Periksa kondisi valve",
+            //               "Verifikasi jumlah pengguna",
+            //               "Perbarui jumlah pengguna bila diperlukan",
+            //             ],
+            //           ),
+            //         );
+            //       },
+            //     );
+            //   },
+            // ),
+          //),
         ],
       ),
     );

@@ -1,41 +1,67 @@
 import 'package:flutter/material.dart';
 import 'package:amiflow/core/theme/app_colors.dart';
+import 'package:amiflow/features/dashboard/domain/entities/chart_filter.dart';
+import 'package:amiflow/features/dashboard/domain/entities/usage_history.dart';
 
 class ChartBottomSheet extends StatelessWidget {
-  final String title;
-  final double usage;
+  final UsageHistory history;
+
+  /// Filter yang sedang dipilih
+  final ChartFilter filter;
+
+  /// Jumlah penghuni node
+  final int totalUsers;
+
+  /// Total penggunaan pada periode tersebut
   final double totalUsage;
 
   const ChartBottomSheet({
     super.key,
-    required this.title,
-    required this.usage,
+    required this.history,
+    required this.filter,
+    required this.totalUsers,
     required this.totalUsage,
   });
 
   @override
   Widget build(BuildContext context) {
-    final percentage =
-        totalUsage == 0 ? 0 : (usage / totalUsage) * 100;
+    final percentage = history.contribution(totalUsage);
 
-    final isWaste = percentage >= 25;
+    final status = history.status(totalUsers);
+
+    final statusColor = history.statusColor(totalUsers);
+
+    String title;
+
+    switch (filter) {
+      case ChartFilter.day:
+        title = history.fullDate;
+        break;
+
+      case ChartFilter.week:
+        title = history.fullDate;
+        break;
+
+      case ChartFilter.month:
+        title = history.fullDate;
+        break;
+
+      case ChartFilter.year:
+        title = history.fullDate;
+        break;
+    }
 
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 30),
-
       decoration: const BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(28),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
-
       child: SafeArea(
         top: false,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-
             /// Handle
             Container(
               width: 55,
@@ -51,47 +77,41 @@ class ChartBottomSheet extends StatelessWidget {
             /// Judul
             Text(
               title,
+              textAlign: TextAlign.center,
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 24,
+                fontSize: 22,
                 fontWeight: FontWeight.bold,
               ),
             ),
 
-            const SizedBox(height: 15),
+            const SizedBox(height: 20),
 
             _buildItem(
               Icons.pie_chart_outline,
               "Kontribusi",
               "${percentage.toStringAsFixed(1)} %",
             ),
+
             const SizedBox(height: 16),
 
             _buildItem(
               Icons.water_drop_outlined,
               "Penggunaan Air",
-              "${usage.toStringAsFixed(2)} m³",
+              "${history.usageLiter.toStringAsFixed(2)} Liter",
             ),
 
             const SizedBox(height: 16),
 
-            _buildItem(
-              Icons.analytics_outlined,
-              "Total Periode",
-              "${totalUsage.toStringAsFixed(2)} m³",
-            ),
+            // _buildItem(
+            //   Icons.analytics_outlined,
+            //   "Total Periode",
+            //   "${totalUsage.toStringAsFixed(1)} Liter",
+            // ),
 
-            const SizedBox(height: 16),
+            //const SizedBox(height: 16),
 
-            _buildItem(
-              isWaste
-                  ? Icons.warning_amber_rounded
-                  : Icons.check_circle_outline,
-              "Status",
-              isWaste ? "BOROS" : "NORMAL",
-              valueColor:
-                  isWaste ? Colors.redAccent : Colors.greenAccent,
-            ),
+            _buildItem(Icons.circle, "Status", status, valueColor: statusColor),
 
             const SizedBox(height: 12),
           ],
@@ -107,31 +127,21 @@ class ChartBottomSheet extends StatelessWidget {
     Color valueColor = AppColors.accent,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 14,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: AppColors.background,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         children: [
-
-          Icon(
-            icon,
-            color: AppColors.accent,
-          ),
+          Icon(icon, color: AppColors.accent),
 
           const SizedBox(width: 14),
 
           Expanded(
             child: Text(
               title,
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 15,
-              ),
+              style: const TextStyle(color: Colors.white70, fontSize: 15),
             ),
           ),
 

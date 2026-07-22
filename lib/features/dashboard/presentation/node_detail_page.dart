@@ -1,9 +1,10 @@
 // lib/features/dashboard/presentation/node_detail_page.dart
-import 'package:amiflow/features/dashboard/data/dummy_chart.dart';
 import 'package:amiflow/features/dashboard/data/node_api.dart';
 import 'package:amiflow/features/dashboard/domain/edit_node_result.dart';
 import 'package:amiflow/features/dashboard/domain/entities/chart_filter.dart';
 import 'package:amiflow/features/dashboard/domain/entities/klasifikasi.dart';
+import 'package:amiflow/features/dashboard/domain/entities/usage_history.dart';
+import 'package:amiflow/features/dashboard/domain/helpers/history_helper.dart';
 import 'package:amiflow/features/dashboard/presentation/widgets/chart_detail_sheet.dart';
 import 'package:amiflow/features/dashboard/presentation/widgets/edit_node_bottom_sheet.dart';
 import 'package:amiflow/features/schedule/presentation/schedule_page.dart';
@@ -11,7 +12,6 @@ import 'package:flutter/material.dart';
 import 'package:amiflow/core/theme/app_colors.dart';
 import 'package:amiflow/features/dashboard/domain/entities/node.dart';
 import 'package:amiflow/features/dashboard/presentation/widgets/usage_chart.dart';
-import 'package:amiflow/features/dashboard/presentation/widgets/stat_card.dart';
 import 'package:amiflow/features/dashboard/presentation/widgets/config_tile.dart';
 import 'package:amiflow/features/dashboard/presentation/widgets/remove_node_dialog.dart';
 
@@ -74,14 +74,71 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
   }
 
   double _flowRate = 12.8;
+
   ChartFilter _selectedFilter = ChartFilter.day;
 
+  /// Total penggunaan sesuai filter
   double get _totalUsage {
-    return _chartData.fold(0.0, (total, value) => total + value);
+    if (_selectedFilter == ChartFilter.year) {
+      return dummyTotalUsage[ChartFilter.year]!;
+    }
+
+    return HistoryHelper.totalUsage(_currentHistory);
   }
 
+  List<UsageHistory> get _currentHistory {
+    switch (_selectedFilter) {
+      case ChartFilter.day:
+        return dummyDailyUsage;
+
+      case ChartFilter.week:
+        return dummyWeeklyUsage;
+
+      case ChartFilter.month:
+        return dummyMonthlyUsage;
+
+      case ChartFilter.year:
+        return [];
+    }
+  }
+
+  /// Data chart sesuai filter
   List<double> get _chartData {
-    return dummyChartData[_selectedFilter] ?? [];
+    if (_selectedFilter == ChartFilter.year) {
+      return dummyChartData[ChartFilter.year]!;
+    }
+
+    return _currentHistory.map((e) => e.usageLiter).toList();
+  }
+
+  /// Label chart sesuai filter
+  List<String> get _chartLabels {
+    switch (_selectedFilter) {
+      case ChartFilter.day:
+        return _currentHistory.map((e) => e.dayLabel).toList();
+
+      case ChartFilter.week:
+        return ["M1", "M2", "M3", "M4"];
+
+      case ChartFilter.month:
+        return [
+          "Jan",
+          "Feb",
+          "Mar",
+          "Apr",
+          "Mei",
+          "Jun",
+          "Jul",
+          "Agu",
+          "Sep",
+          "Okt",
+          "Nov",
+          "Des",
+        ];
+
+      case ChartFilter.year:
+        return dummyChartLabels[ChartFilter.year]!;
+    }
   }
 
   Future<void> _toggleValve() async {
@@ -158,8 +215,8 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
   }
 
   void _back() {
-  Navigator.pop(context, _node);
-}
+    Navigator.pop(context, _node);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -173,6 +230,12 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
               _buildHeader(),
               const SizedBox(height: 20),
               _buildFlowCard(),
+
+              // HistoryCard(
+              //   history: dummyDailyUsage.first,
+              //   totalUsers: _node.totalUsers,
+              //   totalPeriode: HistoryHelper.totalUsage(dummyDailyUsage),
+              // ),
               const SizedBox(height: 15),
               _buildUsageHistory(),
               const SizedBox(height: 15),
@@ -192,12 +255,9 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
     return Row(
       children: [
         IconButton(
-  onPressed: _back,
-  icon: const Icon(
-    Icons.arrow_back,
-    color: AppColors.accentSoft,
-  ),
-),
+          onPressed: _back,
+          icon: const Icon(Icons.arrow_back, color: AppColors.accentSoft),
+        ),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -294,6 +354,10 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
         statusColor = Colors.orangeAccent;
     }
 
+    final volumeText = totalVolume < 1
+        ? totalVolume.toStringAsFixed(3)
+        : totalVolume.toStringAsFixed(2);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
       decoration: BoxDecoration(
@@ -314,7 +378,7 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
           const SizedBox(height: 12),
 
           Text(
-            totalVolume.toStringAsFixed(2),
+            volumeText,
             style: const TextStyle(
               color: AppColors.accent,
               fontSize: 54,
@@ -337,12 +401,6 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
             ),
             child: Row(
               children: [
-                const Icon(
-                  Icons.water_drop_outlined,
-                  color: AppColors.accent,
-                  size: 18,
-                ),
-
                 const SizedBox(width: 8),
 
                 const Text(
@@ -366,23 +424,44 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
           const SizedBox(height: 18),
 
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
-              color: statusColor.withOpacity(.12),
-              borderRadius: BorderRadius.circular(30),
+              color: AppColors.background,
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
-              mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.circle, size: 12, color: statusColor),
-
                 const SizedBox(width: 8),
 
-                Text(
-                  kategori,
-                  style: TextStyle(
-                    color: statusColor,
-                    fontWeight: FontWeight.bold,
+                const Text(
+                  "Status Bulanan",
+                  style: TextStyle(color: Colors.white70),
+                ),
+
+                const Spacer(),
+
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: statusColor.withOpacity(.15),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.circle, size: 10, color: statusColor),
+                      const SizedBox(width: 6),
+                      Text(
+                        kategori,
+                        style: TextStyle(
+                          color: statusColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -394,6 +473,8 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
   }
 
   Widget _buildUsageHistory() {
+    final histories = dummyDailyUsage;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -413,12 +494,16 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
               ),
             ),
           ),
+
           const SizedBox(height: 20),
+
           UsageChart(
             selectedFilter: _selectedFilter,
 
             data: _chartData,
-            labels: dummyChartLabels[_selectedFilter]!,
+
+            labels: _chartLabels,
+
             onFilterChanged: (filter) {
               setState(() {
                 _selectedFilter = filter;
@@ -426,31 +511,25 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
             },
 
             onBarTap: (index) {
+              final history = _currentHistory[index];
+
               showModalBottomSheet(
                 context: context,
-
                 backgroundColor: Colors.transparent,
-
                 isScrollControlled: true,
-
                 builder: (_) {
                   return ChartBottomSheet(
-                    title: dummyChartLabels[_selectedFilter]![index],
-
-                    usage: _chartData[index],
-
+                    history: history,
+                    filter: _selectedFilter,
+                    totalUsers: _node.totalUsers,
                     totalUsage: _totalUsage,
                   );
                 },
               );
             },
           ),
-          const SizedBox(height: 20),
 
-          StatCard(
-            title: "Total Penggunaan",
-            value: "${_totalUsage.toStringAsFixed(2)} m³",
-          ),
+          const SizedBox(height: 20),
         ],
       ),
     );
