@@ -5,14 +5,8 @@ import 'package:amiflow/features/dashboard/domain/entities/usage_history.dart';
 
 class ChartBottomSheet extends StatelessWidget {
   final UsageHistory history;
-
-  /// Filter yang sedang dipilih
   final ChartFilter filter;
-
-  /// Jumlah penghuni node
   final int totalUsers;
-
-  /// Total penggunaan pada periode tersebut
   final double totalUsage;
 
   const ChartBottomSheet({
@@ -26,36 +20,16 @@ class ChartBottomSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final percentage = history.contribution(totalUsage);
-
     final status = history.status(totalUsers);
-
     final statusColor = history.statusColor(totalUsers);
 
-    String title;
-
-    switch (filter) {
-      case ChartFilter.day:
-        title = history.fullDate;
-        break;
-
-      case ChartFilter.week:
-        title = history.fullDate;
-        break;
-
-      case ChartFilter.month:
-        title = history.fullDate;
-        break;
-
-      case ChartFilter.year:
-        title = history.fullDate;
-        break;
-    }
-
     return Container(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 30),
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
       decoration: const BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(30),
+        ),
       ),
       child: SafeArea(
         top: false,
@@ -64,28 +38,37 @@ class ChartBottomSheet extends StatelessWidget {
           children: [
             /// Handle
             Container(
-              width: 55,
-              height: 5,
+              width: 70,
+              height: 6,
               decoration: BoxDecoration(
-                color: Colors.white24,
+                color: Colors.white30,
                 borderRadius: BorderRadius.circular(100),
               ),
             ),
 
             const SizedBox(height: 24),
 
-            /// Judul
             Text(
-              title,
+              _title,
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: Colors.white,
-                fontSize: 22,
+                fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 6),
+
+            Text(
+              _subtitle,
+              style: const TextStyle(
+                color: Colors.white54,
+                fontSize: 14,
+              ),
+            ),
+
+            const SizedBox(height: 24),
 
             _buildItem(
               Icons.pie_chart_outline,
@@ -103,21 +86,73 @@ class ChartBottomSheet extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // _buildItem(
-            //   Icons.analytics_outlined,
-            //   "Total Periode",
-            //   "${totalUsage.toStringAsFixed(1)} Liter",
-            // ),
-
-            //const SizedBox(height: 16),
-
-            _buildItem(Icons.circle, "Status", status, valueColor: statusColor),
-
-            const SizedBox(height: 12),
+            _buildItem(
+              _statusIcon(status),
+              "Status",
+              status,
+              valueColor: statusColor,
+            ),
           ],
         ),
       ),
     );
+  }
+
+  ///========================
+  /// Title
+  ///========================
+
+  String get _title {
+    switch (filter) {
+      case ChartFilter.day:
+        return history.fullDate;
+
+      case ChartFilter.week:
+        return history.fullDate; // nanti diganti Minggu ke-x
+
+      case ChartFilter.month:
+        return history.fullDate; // nanti diganti Juli 2026
+
+      case ChartFilter.year:
+        return history.fullDate;
+    }
+  }
+
+  ///========================
+  /// Subtitle
+  ///========================
+
+  String get _subtitle {
+    switch (filter) {
+      case ChartFilter.day:
+        return "Ringkasan Penggunaan Harian";
+
+      case ChartFilter.week:
+        return "Ringkasan Penggunaan Mingguan";
+
+      case ChartFilter.month:
+        return "Ringkasan Penggunaan Bulanan";
+
+      case ChartFilter.year:
+        return "Ringkasan Penggunaan Tahunan";
+    }
+  }
+
+  ///========================
+  /// Status Icon
+  ///========================
+
+  IconData _statusIcon(String status) {
+    switch (status) {
+      case "HEMAT":
+        return Icons.eco_outlined;
+
+      case "BOROS":
+        return Icons.warning_amber_rounded;
+
+      default:
+        return Icons.check_circle_outline;
+    }
   }
 
   Widget _buildItem(
@@ -127,21 +162,30 @@ class ChartBottomSheet extends StatelessWidget {
     Color valueColor = AppColors.accent,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 14,
+      ),
       decoration: BoxDecoration(
         color: AppColors.background,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         children: [
-          Icon(icon, color: AppColors.accent),
+          Icon(
+            icon,
+            color: AppColors.accent,
+          ),
 
           const SizedBox(width: 14),
 
           Expanded(
             child: Text(
               title,
-              style: const TextStyle(color: Colors.white70, fontSize: 15),
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 15,
+              ),
             ),
           ),
 

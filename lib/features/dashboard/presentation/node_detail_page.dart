@@ -14,6 +14,9 @@ import 'package:amiflow/features/dashboard/domain/entities/node.dart';
 import 'package:amiflow/features/dashboard/presentation/widgets/usage_chart.dart';
 import 'package:amiflow/features/dashboard/presentation/widgets/config_tile.dart';
 import 'package:amiflow/features/dashboard/presentation/widgets/remove_node_dialog.dart';
+import 'package:amiflow/features/dashboard/data/datasources/history_remote_datasource.dart';
+import 'package:amiflow/features/dashboard/data/repositories/history_repository_impl.dart';
+import 'package:amiflow/features/dashboard/domain/usecases/get_daily_history.dart';
 
 class NodeDetailPage extends StatefulWidget {
   final Node node;
@@ -27,6 +30,8 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
   final NodeApi _api = NodeApi(); // tambahkan di atas, sebagai field kelas
   late Node _node;
   late bool _valveOpen;
+  late final GetDailyHistory _getDailyHistory;
+  List<UsageHistory> _dailyHistory = [];
 
   // Hasil klasifikasi dari KlasifikasiController. Null selagi belum selesai
   // di-fetch atau kalau fetch gagal -- tampilan tetap sama, cuma fallback
@@ -41,6 +46,44 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
     _valveOpen = _node.valveOpen;
 
     _loadKlasifikasi();
+
+    Future<void> _loadHistory() async {
+  try {
+    final result = await _getDailyHistory(_node.id);
+
+    if (!mounted) return;
+
+    setState(() {
+      _dailyHistory =
+          result.length > 7
+              ? result.sublist(result.length - 7)
+              : result;
+    });
+  } catch (e) {
+    debugPrint("Gagal memuat history: $e");
+  }
+}
+
+    Future<void> _loadDailyHistory() async {
+      try {
+        final data = await _getDailyHistory(_node.id);
+
+        if (!mounted) return;
+
+        setState(() {
+          _dailyHistory = data;
+        });
+      } catch (e) {
+        debugPrint('Gagal mengambil histori: $e');
+      }
+    }
+
+    final datasource = HistoryRemoteDataSource();
+    final repository = HistoryRepositoryImpl(datasource);
+
+    _getDailyHistory = GetDailyHistory(repository);
+    _loadDailyHistory();
+    _loadHistory();
   }
   //IN YANG BENER
   // Default: bulan berjalan. Ganti di sini kalau nanti ada filter periode.
@@ -89,7 +132,7 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
   List<UsageHistory> get _currentHistory {
     switch (_selectedFilter) {
       case ChartFilter.day:
-        return dummyDailyUsage;
+        return _dailyHistory;
 
       case ChartFilter.week:
         return dummyWeeklyUsage;
@@ -104,42 +147,37 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
 
   /// Data chart sesuai filter
   List<double> get _chartData {
-    if (_selectedFilter == ChartFilter.year) {
-      return dummyChartData[ChartFilter.year]!;
-    }
+  switch (_selectedFilter) {
+    case ChartFilter.day:
+      return _currentHistory.map((e) => e.usageLiter).toList();
 
-    return _currentHistory.map((e) => e.usageLiter).toList();
+    case ChartFilter.week:
+      return dummyChartData[ChartFilter.week]!;
+
+    case ChartFilter.month:
+      return dummyChartData[ChartFilter.month]!;
+
+    case ChartFilter.year:
+      return dummyChartData[ChartFilter.year]!;
   }
+}
 
   /// Label chart sesuai filter
   List<String> get _chartLabels {
-    switch (_selectedFilter) {
-      case ChartFilter.day:
-        return _currentHistory.map((e) => e.dayLabel).toList();
+  switch (_selectedFilter) {
+    case ChartFilter.day:
+      return _currentHistory.map((e) => e.dayLabel).toList();
 
-      case ChartFilter.week:
-        return ["M1", "M2", "M3", "M4"];
+    case ChartFilter.week:
+      return dummyChartLabels[ChartFilter.week]!;
 
-      case ChartFilter.month:
-        return [
-          "Jan",
-          "Feb",
-          "Mar",
-          "Apr",
-          "Mei",
-          "Jun",
-          "Jul",
-          "Agu",
-          "Sep",
-          "Okt",
-          "Nov",
-          "Des",
-        ];
+    case ChartFilter.month:
+      return dummyChartLabels[ChartFilter.month]!;
 
-      case ChartFilter.year:
-        return dummyChartLabels[ChartFilter.year]!;
-    }
+    case ChartFilter.year:
+      return dummyChartLabels[ChartFilter.year]!;
   }
+}
 
   Future<void> _toggleValve() async {
     final statusBaru = !_valveOpen;
@@ -230,12 +268,6 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
               _buildHeader(),
               const SizedBox(height: 20),
               _buildFlowCard(),
-
-              // HistoryCard(
-              //   history: dummyDailyUsage.first,
-              //   totalUsers: _node.totalUsers,
-              //   totalPeriode: HistoryHelper.totalUsage(dummyDailyUsage),
-              // ),
               const SizedBox(height: 15),
               _buildUsageHistory(),
               const SizedBox(height: 15),
@@ -499,17 +531,13 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
 
           UsageChart(
             selectedFilter: _selectedFilter,
-
             data: _chartData,
-
             labels: _chartLabels,
-
             onFilterChanged: (filter) {
               setState(() {
                 _selectedFilter = filter;
               });
             },
-
             onBarTap: (index) {
               final history = _currentHistory[index];
 
