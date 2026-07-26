@@ -48,21 +48,18 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
     _loadKlasifikasi();
 
     Future<void> _loadHistory() async {
-  try {
-    final result = await _getDailyHistory(_node.id);
+      try {
+        final result = await _getDailyHistory(_node.id);
 
-    if (!mounted) return;
+        if (!mounted) return;
 
-    setState(() {
-      _dailyHistory =
-          result.length > 7
-              ? result.sublist(result.length - 7)
-              : result;
-    });
-  } catch (e) {
-    debugPrint("Gagal memuat history: $e");
-  }
-}
+        setState(() {
+          _dailyHistory = result;
+        });
+      } catch (e) {
+        debugPrint("Gagal memuat history: $e");
+      }
+    }
 
     Future<void> _loadDailyHistory() async {
       try {
@@ -147,37 +144,37 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
 
   /// Data chart sesuai filter
   List<double> get _chartData {
-  switch (_selectedFilter) {
-    case ChartFilter.day:
-      return _currentHistory.map((e) => e.usageLiter).toList();
+    switch (_selectedFilter) {
+      case ChartFilter.day:
+        return _currentHistory.map((e) => e.usageLiter).toList();
 
-    case ChartFilter.week:
-      return dummyChartData[ChartFilter.week]!;
+      case ChartFilter.week:
+        return dummyChartData[ChartFilter.week]!;
 
-    case ChartFilter.month:
-      return dummyChartData[ChartFilter.month]!;
+      case ChartFilter.month:
+        return dummyChartData[ChartFilter.month]!;
 
-    case ChartFilter.year:
-      return dummyChartData[ChartFilter.year]!;
+      case ChartFilter.year:
+        return dummyChartData[ChartFilter.year]!;
+    }
   }
-}
 
   /// Label chart sesuai filter
   List<String> get _chartLabels {
-  switch (_selectedFilter) {
-    case ChartFilter.day:
-      return _currentHistory.map((e) => e.dayLabel).toList();
+    switch (_selectedFilter) {
+      case ChartFilter.day:
+        return _currentHistory.map((e) => e.dayLabel).toList();
 
-    case ChartFilter.week:
-      return dummyChartLabels[ChartFilter.week]!;
+      case ChartFilter.week:
+        return dummyChartLabels[ChartFilter.week]!;
 
-    case ChartFilter.month:
-      return dummyChartLabels[ChartFilter.month]!;
+      case ChartFilter.month:
+        return dummyChartLabels[ChartFilter.month]!;
 
-    case ChartFilter.year:
-      return dummyChartLabels[ChartFilter.year]!;
+      case ChartFilter.year:
+        return dummyChartLabels[ChartFilter.year]!;
+    }
   }
-}
 
   Future<void> _toggleValve() async {
     final statusBaru = !_valveOpen;

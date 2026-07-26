@@ -56,71 +56,102 @@ class UsageChart extends StatelessWidget {
               _buildYAxis(),
               const SizedBox(width: 8),
               Expanded(
-                child: Stack(
-                  children: [
-                    _buildGrid(),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final barWidth = constraints.maxWidth / 7;
+                    
+                    
 
-                      children: List.generate(data.length, (index) {
-                        final value = data[index];
+                    return Scrollbar(
+                      thumbVisibility: true,
+                      trackVisibility: true,
 
-                        final maxValue = data.reduce((a, b) => a > b ? a : b);
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
 
-                        return Expanded(
-                          child: GestureDetector(
-                            onTap: () {
-                              onBarTap?.call(index);
-                            },
-
-                            child: Column(
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: SizedBox(
+                            width: data.length * barWidth,
+                            child: Stack(
                               children: [
-                                Expanded(
-                                  child: Align(
-                                    alignment: Alignment.bottomCenter,
+                                _buildGrid(data.length * barWidth),
 
-                                    child: AnimatedContainer(
-                                      duration: const Duration(
-                                        milliseconds: 250,
-                                      ),
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
 
-                                      margin: const EdgeInsets.symmetric(
-                                        horizontal: 2,
-                                      ),
+                                  children: List.generate(data.length, (index) {
+                                    final value = data[index];
 
-                                      height: (value / maxValue) * 160,
+                                    final maxValue = data.reduce(
+                                      (a, b) => a > b ? a : b,
+                                    );
 
-                                      decoration: BoxDecoration(
-                                        color: AppColors.accent.withOpacity(
-                                          .85,
-                                        ),
+                                    return SizedBox(
+                                      width: barWidth,
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          onBarTap?.call(index);
+                                        },
 
-                                        borderRadius:
-                                            const BorderRadius.vertical(
-                                              top: Radius.circular(4),
+                                        child: Column(
+                                          children: [
+                                            Expanded(
+                                              child: Align(
+                                                alignment:
+                                                    Alignment.bottomCenter,
+
+                                                child: AnimatedContainer(
+                                                  duration: const Duration(
+                                                    milliseconds: 250,
+                                                  ),
+
+                                                  margin:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 2,
+                                                      ),
+
+                                                  height:
+                                                      (value / maxValue) * 160,
+
+                                                  decoration: BoxDecoration(
+                                                    color: AppColors.accent
+                                                        .withOpacity(.85),
+
+                                                    borderRadius:
+                                                        const BorderRadius.vertical(
+                                                          top: Radius.circular(
+                                                            4,
+                                                          ),
+                                                        ),
+                                                  ),
+                                                ),
+                                              ),
                                             ),
+
+                                            const SizedBox(height: 12),
+
+                                            Text(
+                                              labels[index],
+
+                                              style: const TextStyle(
+                                                color: Colors.white54,
+                                                fontSize: 10,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                  ),
-                                ),
-
-                                const SizedBox(height: 6),
-
-                                Text(
-                                  labels[index],
-
-                                  style: const TextStyle(
-                                    color: Colors.white54,
-                                    fontSize: 10,
-                                  ),
+                                    );
+                                  }),
                                 ),
                               ],
                             ),
                           ),
-                        );
-                      }),
-                    ),
-                  ],
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
             ],
@@ -131,18 +162,21 @@ class UsageChart extends StatelessWidget {
   }
 
   // ================ BAGIAN GRID =================
-  Widget _buildGrid() {
-    return IgnorePointer(
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: 13),
-        child: Column(
-          children: List.generate(
-            6,
-            (index) => Expanded(
-              child: Center(
-                child: Container(
-                  height: 1,
-                  color: Colors.white.withOpacity(.06),
+  Widget _buildGrid(double width) {
+    return SizedBox(
+      width: width,
+      child: IgnorePointer(
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 13),
+          child: Column(
+            children: List.generate(
+              6,
+              (index) => Expanded(
+                child: Center(
+                  child: Container(
+                    height: 1,
+                    color: Colors.white.withOpacity(.06),
+                  ),
                 ),
               ),
             ),
