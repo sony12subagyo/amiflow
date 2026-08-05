@@ -36,12 +36,19 @@ class Node {
   factory Node.fromJson(Map<String, dynamic> json) {
     return Node(
       id: json['id'].toString(),
-      gatewayId: json['gateway_id'].toString(),
+
+      gatewayId: json['gateway_id']?.toString() ?? '',
+
       code: json['kode_node'] ?? '',
-      owner: json['nama_pemilik'] ?? '',
+
+      owner: json['nama_pemilik'] ?? 'Belum dikonfigurasi',
+
       totalUsers: json['jumlah_penghuni'] ?? 0,
+
       active: (json['aktif'] ?? 0) == 1,
-      online: (json['online'] ?? 0) == 1,
+
+      online: json['online'] == true,
+
       telemetry: json['telemetry'] != null
           ? Telemetry.fromJson(json['telemetry'])
           : null,
