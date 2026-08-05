@@ -8,14 +8,12 @@ class DayScheduleCard extends StatelessWidget {
 
   /// Status apakah schedule diaktifkan
   final bool enabled;
-  final bool globalOverride;
   final VoidCallback onTap;
 
   const DayScheduleCard({
     super.key,
     required this.day,
     required this.enabled,
-    required this.globalOverride,
     required this.onTap,
     this.startTime,
     this.endTime,
@@ -36,8 +34,6 @@ class DayScheduleCard extends StatelessWidget {
             border: Border.all(
               color: !enabled
                   ? Colors.white10
-                  : globalOverride
-                  ? Colors.amber
                   : AppColors.accent.withOpacity(.7),
               width: 1.3,
             ),
@@ -71,17 +67,13 @@ class DayScheduleCard extends StatelessWidget {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: globalOverride
-                                  ? Colors.orange.withOpacity(.18)
-                                  : Colors.green.withOpacity(.18),
+                              color: Colors.green.withOpacity(.18),
                               borderRadius: BorderRadius.circular(20),
                             ),
-                            child: Text(
-                              globalOverride ? "Jeda" : "Aktif",
+                            child: const Text(
+                              "Aktif",
                               style: TextStyle(
-                                color: globalOverride
-                                    ? Colors.orange
-                                    : Colors.greenAccent,
+                                color: Colors.greenAccent,
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
                                 letterSpacing: .8,

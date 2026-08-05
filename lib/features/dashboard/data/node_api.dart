@@ -6,12 +6,11 @@ import 'package:amiflow/features/dashboard/domain/entities/node.dart';
 import 'package:amiflow/features/dashboard/domain/entities/node_detail.dart';
 
 class NodeApi {
-  Future<List<Node>> fetchNodes(String gatewayId) async {
-    // sementara gatewayId belum dipakai
-    // nanti backend tinggal menambahkan endpoint
-    // /api/tb/gateways/{id}/nodes
-
-    final url = Uri.parse('${AppConfig.baseUrl}/tb/nodes');
+  /// BARU -- detail satu node LENGKAP: info MySQL + telemetry live
+  /// ThingsBoard + status_penggunaan resmi (StatusPenggunaanService),
+  /// lewat endpoint GET /api/tb/nodes/{id}. Dipakai NodeDetailPage.
+  Future<NodeDetail> fetchNodeDetail(String nodeId) async {
+    final url = Uri.parse('${AppConfig.baseUrl}/tb/nodes/$nodeId');
 
     final response = await http.get(
       url,
@@ -21,47 +20,62 @@ class NodeApi {
       },
     );
 
-    print("STATUS = ${response.statusCode}");
-    print(response.body);
+    if (response.statusCode == 200) {
+      final body = jsonDecode(response.body);
+      return NodeDetail.fromJson(body['data']);
+    } else {
+      throw Exception('Gagal memuat detail node (${response.statusCode})');
+    }
+  }
+
+  /// LAMA -- dipertahankan untuk kompatibilitas kalau masih dipakai
+  /// di tempat lain. Untuk DashboardPage, pakai fetchNodesFromGateway().
+  Future<List<Node>> fetchNodes(String gatewayId) async {
+    final url = Uri.parse('${AppConfig.baseUrl}/gateways/$gatewayId/nodes');
+
+    final response = await http.get(
+      url,
+      headers: {
+        'Accept': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((json) => Node.fromJson(json)).toList();
+    } else {
+      throw Exception('Gagal memuat node (${response.statusCode})');
+    }
+  }
+
+  /// BARU -- ambil node dalam satu gateway LENGKAP dengan telemetry
+  /// live ThingsBoard + status Hemat/Normal/Boros resmi dari backend
+  /// (StatusPenggunaanService, sama sumbernya dengan fetchKlasifikasi()),
+  /// lewat endpoint GET /api/tb/gateways/{id}.
+  ///
+  /// Pakai ini untuk menggantikan fetchNodes() di DashboardPage, supaya
+  /// kartu node langsung menampilkan status terkini tanpa panggilan
+  /// terpisah per node.
+  Future<List<Node>> fetchNodesFromGateway(String gatewayId) async {
+    final url = Uri.parse('${AppConfig.baseUrl}/tb/gateways/$gatewayId');
+
+    final response = await http.get(
+      url,
+      headers: {
+        'Accept': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
+      },
+    );
 
     if (response.statusCode == 200) {
       final body = jsonDecode(response.body);
-
-      final List<dynamic> data = body['data'];
-      print(data);
-
-      final nodes = data.map((e) => Node.fromJson(e)).toList();
-
-      /// sementara filter di Flutter
-      return nodes.where((node) => node.gatewayId == gatewayId).toList();
+      final List<dynamic> nodesJson = body['data']['nodes'];
+      return nodesJson.map((json) => Node.fromTbJson(json)).toList();
+    } else {
+      throw Exception('Gagal memuat node (${response.statusCode})');
     }
-
-    throw Exception('Gagal memuat node (${response.statusCode})');
   }
-
- Future<NodeDetail> fetchNodeDetail(String nodeId) async {
-  final url = Uri.parse(
-    '${AppConfig.baseUrl}/tb/nodes/$nodeId',
-  );
-
-  final response = await http.get(
-    url,
-    headers: {
-      'Accept': 'application/json',
-      'ngrok-skip-browser-warning': 'true',
-    },
-  );
-
-  if (response.statusCode == 200) {
-    final body = jsonDecode(response.body);
-
-    return NodeDetail.fromJson(body['data']);
-  }
-
-  throw Exception(
-    'Gagal memuat detail node (${response.statusCode})',
-  );
-}
 
   Future<void> deleteNode(String id) async {
     final url = Uri.parse('${AppConfig.baseUrl}/nodes/$id');
@@ -160,14 +174,8 @@ class NodeApi {
   }
 
   /// Ambil hasil klasifikasi Hemat/Normal/Boros dari KlasifikasiController.
-  ///
-  /// CATATAN: path endpoint di bawah ini ASUMSI ('/klasifikasi/{nodeId}/{tahun}/{bulan}').
-  /// Cek routes/api.php di Laravel untuk path aslinya, sesuaikan jika beda.
-  ///
-  /// Backend bisa balas 200 (lengkap), 202 (ML belum aktif, < 30 hari data),
-  /// atau 400 (data < 2 baris) -- ketiganya tetap di-parse jadi [Klasifikasi],
-  /// bukan dilempar sebagai error, karena ini kondisi valid yang perlu
-  /// ditampilkan ke user, bukan kegagalan jaringan.
+  /// Ini SUMBER RESMI yang sama dipakai fetchNodesFromGateway() -- pastikan
+  /// dua-duanya selalu menampilkan kategori yang identik untuk node yang sama.
   Future<Klasifikasi> fetchKlasifikasi(
     String nodeId,
     int tahun,

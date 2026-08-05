@@ -4,7 +4,6 @@ import 'package:amiflow/features/schedule/domain/schedule_day.dart';
 import 'package:amiflow/features/schedule/domain/schedule_result.dart';
 import 'package:amiflow/features/schedule/presentation/schedule_dialog.dart';
 import 'package:amiflow/features/schedule/presentation/widgets/day_schedule_card.dart';
-import 'package:amiflow/features/schedule/presentation/widgets/global_override_switch.dart';
 import 'package:amiflow/features/schedule/presentation/widgets/schedule_toast.dart';
 import 'package:flutter/material.dart';
 
@@ -20,7 +19,6 @@ class SchedulePage extends StatefulWidget {
 class _SchedulePageState extends State<SchedulePage> {
   final ScheduleApi _api = ScheduleApi();
   List<ScheduleDay> schedules = [];
-  bool globalOverride = false;
   bool _loading = true;
   String? _error;
 
@@ -96,15 +94,21 @@ class _SchedulePageState extends State<SchedulePage> {
   ) async {
     try {
       if (result.applyAllDays) {
-        for (final item in schedules) {
-          await _api.saveSchedule(
-            nodeId: widget.nodeId,
-            hari: item.day,
-            aktif: item.enabled,
-            jamBuka: item.startTime,
-            jamTutup: item.endTime,
-          );
-        }
+        // Kirim SEKALIGUS lewat endpoint batch (1 request), BUKAN loop
+        // memanggil saveSchedule() 7 kali seperti sebelumnya. `schedules`
+        // di sini sudah diperbarui (lewat setState di pemanggilnya)
+        // SEBELUM method ini dipanggil, jadi tinggal dikemas jadi array.
+        final items = schedules.map((item) {
+          return {
+            'node_id': widget.nodeId,
+            'hari': item.day,
+            'aktif': item.enabled,
+            'jam_buka': item.enabled ? item.startTime : null,
+            'jam_tutup': item.enabled ? item.endTime : null,
+          };
+        }).toList();
+
+        await _api.saveScheduleBatch(items);
       } else {
         await _api.saveSchedule(
           nodeId: widget.nodeId,
@@ -203,7 +207,6 @@ class _SchedulePageState extends State<SchedulePage> {
                             child: DayScheduleCard(
                               day: schedule.day,
                               enabled: schedule.enabled,
-                              globalOverride: globalOverride,
                               startTime: schedule.startTime,
                               endTime: schedule.endTime,
                               onTap: () async {
@@ -269,15 +272,6 @@ class _SchedulePageState extends State<SchedulePage> {
                           );
                         }),
 
-                        const SizedBox(height: 20),
-                        GlobalOverrideSwitch(
-                          value: globalOverride,
-                          onChanged: (value) {
-                            setState(() {
-                              globalOverride = value;
-                            });
-                          },
-                        ),
                         const SizedBox(height: 30),
                       ],
                     ),

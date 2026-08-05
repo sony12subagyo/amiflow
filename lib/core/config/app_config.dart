@@ -4,6 +4,5 @@ class AppConfig {
   static const String baseUrl =
       // api yang sudah di hosting
       //"https://amiflow-be-deploy-production.up.railway.app/api";
-      "https://6804-203-190-44-108.ngrok-free.app/api";
-
+      "https://ether-undrafted-guileless.ngrok-free.dev/api";
 }

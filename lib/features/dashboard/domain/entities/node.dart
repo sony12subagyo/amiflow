@@ -1,89 +1,104 @@
-import 'telemetry.dart';
+// lib/features/dashboard/domain/entities/node.dart
 
 class Node {
   final String id;
-  final String gatewayId;
 
-  /// Kode node (NODE 01)
+  /// ID LoRa / Device
   final String code;
+
+  /// Status koneksi node
+  final bool online;
 
   /// Nama pemilik
   final String owner;
 
-  /// Jumlah penghuni
+  /// Jumlah pengguna air
   final int totalUsers;
 
-  /// Status aktif
-  final bool active;
+  /// Total penggunaan air (m³) -- dari perhitungan lokal lama, bisa null
+  /// kalau node baru terdeteksi (belum lengkap) atau data belum tersedia.
+  final double waterUsageM3;
 
-  /// Status online
-  final bool online;
+  /// Debit air tertinggi (L/min)
+  final double peakFlow;
 
-  /// Data telemetry
-  final Telemetry? telemetry;
+  /// Status valve
+  final bool valveOpen;
+
+  /// Kategori Hemat/Normal/Boros -- SUMBER RESMI dari backend
+  /// (StatusPenggunaanService, sama persis dengan fetchKlasifikasi()).
+  /// null kalau data belum cukup / node ini belum mengirim telemetri.
+  final String? kategori;
+
+  /// Flow rate TERKINI langsung dari ThingsBoard (bukan agregat bulanan).
+  final String? flowTerkini;
 
   const Node({
     required this.id,
-    required this.gatewayId,
     required this.code,
+    required this.online,
     required this.owner,
     required this.totalUsers,
-    required this.active,
-    required this.online,
-    this.telemetry,
+    required this.waterUsageM3,
+    required this.peakFlow,
+    required this.valveOpen,
+    this.kategori,
+    this.flowTerkini,
   });
 
+  /// Dipakai untuk endpoint LAMA (/gateways/{id}/nodes) -- dipertahankan
+  /// untuk kompatibilitas kalau masih dipakai di tempat lain.
   factory Node.fromJson(Map<String, dynamic> json) {
     return Node(
-      id: json['id'].toString(),
-      gatewayId: json['gateway_id'].toString(),
-      code: json['kode_node'] ?? '',
-      owner: json['nama_pemilik'] ?? '',
-      totalUsers: json['jumlah_penghuni'] ?? 0,
-      active: (json['aktif'] ?? 0) == 1,
-      online: (json['online'] ?? 0) == 1,
-      telemetry: json['telemetry'] != null
-          ? Telemetry.fromJson(json['telemetry'])
-          : null,
+      id: json['id'].toString(), // lentur: terima int ataupun String
+      code: json['code'] as String,
+      online: json['online'] as bool,
+      owner: json['owner'] as String,
+      totalUsers: json['totalUsers'] as int,
+      waterUsageM3: (json['waterUsageM3'] as num).toDouble(),
+      peakFlow: (json['peakFlow'] as num).toDouble(),
+      valveOpen: json['valveOpen'] as bool,
     );
   }
 
-  /// ==========================
-  /// Shortcut Telemetry
-  /// ==========================
+  /// Dipakai untuk endpoint BARU (/api/tb/gateways/{id}), bentuknya
+  /// snake_case dan menyertakan telemetry + status_penggunaan bawaan
+  /// ThingsBoard/StatusPenggunaanService -- INI yang jadi sumber kategori.
+  factory Node.fromTbJson(Map<String, dynamic> json) {
+    final telemetry = json['telemetry'] as Map<String, dynamic>?;
+    final status = json['status_penggunaan'] as Map<String, dynamic>?;
 
-  double get waterUsageM3 => telemetry?.volume ?? 0;
-
-  double get peakFlow => telemetry?.flow ?? 0;
-
-  bool get valveOpen => telemetry?.valveOpen ?? false;
-
-  /// ==========================
-  /// Normal Usage
-  /// ==========================
-
-  double get normalUsageM3 {
-    return (totalUsers * 1800) / 1000;
+    return Node(
+      id: json['id'].toString(),
+      code: json['kode_node']?.toString() ?? '-',
+      online: json['online'] == 1 || json['online'] == true,
+      owner: json['nama_pemilik']?.toString() ?? '(Belum diisi)',
+      totalUsers: json['jumlah_penghuni'] ?? 0,
+      // waterUsageM3/peakFlow dari cara lama sudah tidak dipakai lagi
+      // di jalur ini -- konsumsi resmi ada di status?['konsumsi_liter'].
+      waterUsageM3: 0,
+      peakFlow: telemetry?['flow'] != null
+          ? double.tryParse(telemetry!['flow'].toString()) ?? 0
+          : 0,
+      valveOpen: telemetry?['valve']?.toString() == '1',
+      kategori: status?['kategori']?.toString(),
+      flowTerkini: telemetry?['flow']?.toString(),
+    );
   }
 
-  /// ==========================
-  /// Status Penggunaan
-  /// ==========================
+  /// @deprecated JANGAN dipakai lagi -- ini hitungan lokal yang bisa
+  /// beda hasil dari backend (StatusPenggunaanService). Pakai `kategori`
+  /// (dari Node.fromTbJson) atau hasil fetchKlasifikasi() sebagai gantinya.
+  double get normalUsageM3 => (totalUsers * 1800) / 1000;
 
+  /// @deprecated lihat catatan di atas.
   String get usageStatus {
     final normal = normalUsageM3;
-
     final lower = normal * 0.9;
     final upper = normal * 1.1;
 
-    if (waterUsageM3 < lower) {
-      return "HEMAT";
-    }
-
-    if (waterUsageM3 > upper) {
-      return "BOROS";
-    }
-
+    if (waterUsageM3 < lower) return "HEMAT";
+    if (waterUsageM3 > upper) return "BOROS";
     return "NORMAL";
   }
 }
