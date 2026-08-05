@@ -6,28 +6,6 @@ import 'package:amiflow/features/dashboard/domain/entities/node.dart';
 import 'package:amiflow/features/dashboard/domain/entities/node_detail.dart';
 
 class NodeApi {
-  /// BARU -- detail satu node LENGKAP: info MySQL + telemetry live
-  /// ThingsBoard + status_penggunaan resmi (StatusPenggunaanService),
-  /// lewat endpoint GET /api/tb/nodes/{id}. Dipakai NodeDetailPage.
-  Future<NodeDetail> fetchNodeDetail(String nodeId) async {
-    final url = Uri.parse('${AppConfig.baseUrl}/tb/nodes/$nodeId');
-
-    final response = await http.get(
-      url,
-      headers: {
-        'Accept': 'application/json',
-        'ngrok-skip-browser-warning': 'true',
-      },
-    );
-
-    if (response.statusCode == 200) {
-      final body = jsonDecode(response.body);
-      return NodeDetail.fromJson(body['data']);
-    } else {
-      throw Exception('Gagal memuat detail node (${response.statusCode})');
-    }
-  }
-
   /// LAMA -- dipertahankan untuk kompatibilitas kalau masih dipakai
   /// di tempat lain. Untuk DashboardPage, pakai fetchNodesFromGateway().
   Future<List<Node>> fetchNodes(String gatewayId) async {
@@ -75,6 +53,48 @@ class NodeApi {
     } else {
       throw Exception('Gagal memuat node (${response.statusCode})');
     }
+  }
+
+  /// Detail satu node LENGKAP: info MySQL + telemetry live ThingsBoard +
+  /// status_penggunaan resmi (StatusPenggunaanService), lewat endpoint
+  /// GET /api/tb/nodes/{id}. Dipakai NodeDetailPage.
+  Future<NodeDetail> fetchNodeDetail(String nodeId) async {
+    final url = Uri.parse('${AppConfig.baseUrl}/tb/nodes/$nodeId');
+
+    print("DETAIL URL = $url");
+
+    final response = await http.get(
+      url,
+      headers: {
+        'Accept': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
+      },
+    );
+
+    print("DETAIL STATUS = ${response.statusCode}");
+
+    if (response.statusCode == 200) {
+      final body = jsonDecode(response.body);
+
+      // Debug JSON dari Laravel
+      print("========== RAW JSON ==========");
+      print(body);
+
+      final detail = NodeDetail.fromJson(body['data']);
+
+      // Debug hasil parsing Flutter
+      print("========== NODE DETAIL ==========");
+      print("TB DEVICE : ${detail.tbDeviceId}");
+      print("Volume    : ${detail.telemetry.volume}");
+      print("Flow      : ${detail.telemetry.flow}");
+      print("Valve     : ${detail.telemetry.valveOpen}");
+
+      return detail;
+    }
+
+    print(response.body);
+
+    throw Exception('Gagal memuat detail node (${response.statusCode})');
   }
 
   Future<void> deleteNode(String id) async {
@@ -152,8 +172,13 @@ class NodeApi {
     }
   }
 
-  Future<bool> updateValve(String nodeId, bool open) async {
-    final url = Uri.parse('${AppConfig.baseUrl}/nodes/$nodeId/valve');
+  Future<void> updateValve({
+    required String deviceId,
+    required bool open,
+  }) async {
+    final url = Uri.parse(
+      '${AppConfig.baseUrl}/thingsboard/devices/$deviceId/valve',
+    );
 
     final response = await http.post(
       url,
@@ -165,11 +190,13 @@ class NodeApi {
       body: jsonEncode({'open': open}),
     );
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return data['valveOpen'] as bool; // status terbaru dari server
-    } else {
-      throw Exception('Gagal mengubah valve (${response.statusCode})');
+    print("=== UPDATE VALVE ===");
+    print("Device ID : $deviceId");
+    print("Status    : ${response.statusCode}");
+    print(response.body);
+
+    if (response.statusCode != 200) {
+      throw Exception('Gagal mengirim perintah valve (${response.statusCode})');
     }
   }
 

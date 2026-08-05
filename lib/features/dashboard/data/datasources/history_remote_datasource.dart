@@ -6,9 +6,7 @@ import 'package:amiflow/features/dashboard/data/models/usage_history_model.dart'
 
 class HistoryRemoteDataSource {
   Future<List<UsageHistoryModel>> getDailyHistory(String nodeId) async {
-    final url = Uri.parse(
-      '${AppConfig.baseUrl}/nodes/$nodeId/daily-history',
-    );
+    final url = Uri.parse('${AppConfig.baseUrl}/nodes/$nodeId/chart');
 
     final response = await http.get(
       url,
@@ -22,10 +20,10 @@ class HistoryRemoteDataSource {
       throw Exception('Gagal mengambil riwayat penggunaan');
     }
 
-    final List data = jsonDecode(response.body);
+    final json = jsonDecode(response.body);
 
-    return data
-        .map((e) => UsageHistoryModel.fromJson(e))
-        .toList();
+    final List data = json['data'];
+
+    return data.map((e) => UsageHistoryModel.fromJson(e)).toList();
   }
 }

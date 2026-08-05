@@ -8,6 +8,7 @@ class NodeDetail {
 
   final String code;
   final String owner;
+  final String tbDeviceId;
 
   final int totalUsers;
 
@@ -28,10 +29,12 @@ class NodeDetail {
     required this.online,
     required this.telemetry,
     required this.statusPenggunaan,
+    required this.tbDeviceId,
   });
 
   factory NodeDetail.fromJson(Map<String, dynamic> json) {
     return NodeDetail(
+      tbDeviceId: json['tb_device_id'] ?? '',
       id: json['id'].toString(),
       gatewayId: json['gateway_id'].toString(),
       code: json['kode_node'] ?? '',
