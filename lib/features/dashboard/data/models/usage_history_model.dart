@@ -7,9 +7,9 @@ class UsageHistoryModel extends UsageHistory {
   });
 
   factory UsageHistoryModel.fromJson(Map<String, dynamic> json) {
-    return UsageHistoryModel(
-      date: DateTime.parse(json['date']),
-      usageLiter: (json['usage_liter'] as num).toDouble(),
-    );
-  }
+  return UsageHistoryModel(
+    date: DateTime.parse(json['date']),
+    usageLiter: (json['usageLiter'] as num).toDouble(),
+  );
+}
 }

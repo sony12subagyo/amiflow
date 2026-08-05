@@ -17,7 +17,6 @@ import 'package:amiflow/features/dashboard/presentation/widgets/remove_node_dial
 import 'package:amiflow/features/dashboard/data/datasources/history_remote_datasource.dart';
 import 'package:amiflow/features/dashboard/data/repositories/history_repository_impl.dart';
 import 'package:amiflow/features/dashboard/domain/usecases/get_daily_history.dart';
-import 'package:amiflow/features/dashboard/domain/entities/node.dart';
 import 'package:amiflow/features/dashboard/domain/entities/node_detail.dart';
 
 class NodeDetailPage extends StatefulWidget {
@@ -55,20 +54,6 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
     _loadKlasifikasi();
     _loadNodeDetail();
 
-    Future<void> _loadHistory() async {
-      try {
-        final result = await _getDailyHistory(_node.id);
-
-        if (!mounted) return;
-
-        setState(() {
-          _dailyHistory = result;
-        });
-      } catch (e) {
-        debugPrint("Gagal memuat history: $e");
-      }
-    }
-
     Future<void> _loadDailyHistory() async {
       try {
         final data = await _getDailyHistory(_node.id);
@@ -88,7 +73,6 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
 
     _getDailyHistory = GetDailyHistory(repository);
     _loadDailyHistory();
-    _loadHistory();
   }
   //IN YANG BENER
   // Default: bulan berjalan. Ganti di sini kalau nanti ada filter periode.
@@ -188,13 +172,13 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
         return _currentHistory.map((e) => e.usageLiter).toList();
 
       case ChartFilter.week:
-        return dummyChartData[ChartFilter.week]!;
+        return [];
 
       case ChartFilter.month:
-        return dummyChartData[ChartFilter.month]!;
+        return [];
 
       case ChartFilter.year:
-        return dummyChartData[ChartFilter.year]!;
+        return [];
     }
   }
 
@@ -202,16 +186,16 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
   List<String> get _chartLabels {
     switch (_selectedFilter) {
       case ChartFilter.day:
-        return _currentHistory.map((e) => e.dayLabel).toList();
+        return _currentHistory.map((history) => history.dayLabel).toList();
 
       case ChartFilter.week:
-        return dummyChartLabels[ChartFilter.week]!;
+        return [];
 
       case ChartFilter.month:
-        return dummyChartLabels[ChartFilter.month]!;
+        return [];
 
       case ChartFilter.year:
-        return dummyChartLabels[ChartFilter.year]!;
+        return [];
     }
   }
 
@@ -580,63 +564,37 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
 
           const SizedBox(height: 20),
 
-          if (!hasHistory)
-            Column(
-              children: const [
-                SizedBox(height: 40),
+          UsageChart(
+            selectedFilter: _selectedFilter,
+            data: _chartData,
+            labels: _chartLabels,
+            onFilterChanged: (filter) {
+              setState(() {
+                _selectedFilter = filter;
+              });
+            },
+            onBarTap: (index) {
+              if (index >= _currentHistory.length) {
+                return;
+              }
 
-                Icon(Icons.bar_chart_rounded, color: Colors.white24, size: 70),
+              final history = _currentHistory[index];
 
-                SizedBox(height: 20),
-
-                Text(
-                  "Belum ada riwayat penggunaan",
-                  style: TextStyle(color: Colors.white54, fontSize: 16),
-                ),
-
-                SizedBox(height: 8),
-
-                Text(
-                  "Data chart akan muncul ketika telemetry tersedia.",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.white38),
-                ),
-
-                SizedBox(height: 40),
-              ],
-            )
-          else
-            UsageChart(
-              selectedFilter: _selectedFilter,
-              data: _chartData,
-              labels: _chartLabels,
-              onFilterChanged: (filter) {
-                setState(() {
-                  _selectedFilter = filter;
-                });
-              },
-              onBarTap: (index) {
-                if (index >= _currentHistory.length) {
-                  return;
-                }
-
-                final history = _currentHistory[index];
-
-                showModalBottomSheet(
-                  context: context,
-                  backgroundColor: Colors.transparent,
-                  isScrollControlled: true,
-                  builder: (_) {
-                    return ChartBottomSheet(
-                      history: history,
-                      filter: _selectedFilter,
-                      totalUsers: _node.totalUsers,
-                      totalUsage: _totalUsage,
-                    );
-                  },
-                );
-              },
-            ),
+              showModalBottomSheet(
+                context: context,
+                backgroundColor: Colors.transparent,
+                isScrollControlled: true,
+                builder: (_) {
+                  return ChartBottomSheet(
+                    history: history,
+                    filter: _selectedFilter,
+                    totalUsers: _node.totalUsers,
+                    totalUsage: _totalUsage,
+                  );
+                },
+              );
+            },
+          ),
         ],
       ),
     );
