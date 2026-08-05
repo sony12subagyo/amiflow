@@ -113,6 +113,10 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
 
     try {
       final detail = await _api.fetchNodeDetail(_node.id);
+      debugPrint("========== NODE DETAIL ==========");
+      debugPrint("Volume : ${detail.telemetry.volume}");
+      debugPrint("Flow   : ${detail.telemetry.flow}");
+      debugPrint("Valve  : ${detail.telemetry.valveOpen}");
 
       if (!mounted) return;
 
@@ -200,32 +204,62 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
   }
 
   Future<void> _toggleValve() async {
+    if (!_detail!.online) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            "Valve sedang tidak aktif.\nNode sedang offline sehingga valve tidak dapat dibuka atau ditutup.",
+          ),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    if (_detail == null) return;
+
     final statusBaru = !_valveOpen;
 
-    // ubah tampilan dulu (biar responsif)
+    // ===========================
+    // UI langsung berubah
+    // ===========================
     setState(() {
       _valveOpen = statusBaru;
     });
 
     try {
-      final hasilServer = await _api.updateValve(_node.id, statusBaru);
-      // sinkronkan dengan status yang dikonfirmasi server
-      setState(() {
-        _valveOpen = hasilServer;
-      });
+      await _api.updateValve(deviceId: _detail!.tbDeviceId, open: statusBaru);
+
       if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(hasilServer ? 'Valve dibuka' : 'Valve ditutup')),
+        SnackBar(
+          content: Text(
+            statusBaru
+                ? "Perintah membuka valve dikirim"
+                : "Perintah menutup valve dikirim",
+          ),
+        ),
       );
+
+      // Nanti kalau node sudah online bisa diaktifkan lagi
+      await Future.delayed(const Duration(seconds: 1));
+      print("Sebelum reload : $_valveOpen");
+      await _loadNodeDetail();
+      print("Sesudah reload : ${_detail?.telemetry.valveOpen}");
     } catch (e) {
-      // kalau gagal, kembalikan tampilan ke status semula
+      // ===========================
+      // Kalau gagal, balikin UI
+      // ===========================
       setState(() {
         _valveOpen = !statusBaru;
       });
+
       if (!mounted) return;
+
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Gagal mengubah valve')));
+      ).showSnackBar(SnackBar(content: Text("Gagal mengubah valve\n$e")));
     }
   }
 

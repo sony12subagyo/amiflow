@@ -193,7 +193,7 @@ class _DashboardPageState extends State<DashboardPage> {
       child: GridView.builder(
         padding: const EdgeInsets.only(bottom: 90),
         physics: const BouncingScrollPhysics(),
-        itemCount: _filtered.length + 1,
+        itemCount: _filtered.length,
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
           crossAxisSpacing: 12,
@@ -201,43 +201,6 @@ class _DashboardPageState extends State<DashboardPage> {
           childAspectRatio: 1,
         ),
         itemBuilder: (context, index) {
-          if (index == _filtered.length) {
-            return AddNodeCard(
-              onTap: () async {
-                final hasil = await showDialog<Map<String, String>>(
-                  context: context,
-                  barrierDismissible: true,
-                  builder: (_) => const AddNodeDialog(),
-                );
-
-                if (hasil == null) return; // user cancel
-
-                try {
-                  final baru = await _api.addNode(
-                    // gatewayId:
-                    gatewayId: "1", // pake dummy dlu
-                    kodeNode: hasil['kode']!,
-                    namaPemilik: hasil['owner']!,
-                    jumlahPenghuni: int.parse(hasil['jumlah']!),
-                    password: hasil['kode']!, // password default sementara
-                  );
-                  setState(() {
-                    _nodes.add(baru);
-                    _applyFilter();
-                  });
-                  if (!mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Node ditambahkan')),
-                  );
-                } catch (e) {
-                  if (!mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Gagal menambah node')),
-                  );
-                }
-              },
-            );
-          }
           return NodeCard(
             node: _filtered[index],
             onTap: () => _openDetail(_filtered[index]),
