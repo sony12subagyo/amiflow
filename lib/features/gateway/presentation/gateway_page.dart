@@ -183,7 +183,8 @@ class _GatewayPageState extends State<GatewayPage> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => DashboardPage(gateway: gateway),
+                // builder: (_) => DashboardPage(gateway: gateway),
+                builder: (_) =>  DashboardPage(),
               ),
             );
           },

@@ -24,6 +24,9 @@ class UsageChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasData = data.isNotEmpty;
+
+    final maxValue = hasData ? data.reduce((a, b) => a > b ? a : b) : 1;
     return Column(
       children: [
         /// ================= FILTER =================
@@ -53,14 +56,37 @@ class UsageChart extends StatelessWidget {
           height: 200,
           child: Row(
             children: [
-              _buildYAxis(),
+              // _buildYAxis(maxValue),
               const SizedBox(width: 8),
               Expanded(
-                child: LayoutBuilder(
+  child: !hasData
+      ? const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+
+              Icon(
+                Icons.bar_chart_rounded,
+                color: Colors.white24,
+                size: 70,
+              ),
+
+              SizedBox(height: 12),
+
+              Text(
+                "Belum ada riwayat penggunaan",
+                style: TextStyle(
+                  color: Colors.white54,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        )
+
+      : LayoutBuilder(
                   builder: (context, constraints) {
                     final barWidth = constraints.maxWidth / 7;
-                    
-                    
 
                     return Scrollbar(
                       thumbVisibility: true,
@@ -83,9 +109,6 @@ class UsageChart extends StatelessWidget {
                                   children: List.generate(data.length, (index) {
                                     final value = data[index];
 
-                                    final maxValue = data.reduce(
-                                      (a, b) => a > b ? a : b,
-                                    );
 
                                     return SizedBox(
                                       width: barWidth,
@@ -111,8 +134,8 @@ class UsageChart extends StatelessWidget {
                                                         horizontal: 2,
                                                       ),
 
-                                                  height:
-                                                      (value / maxValue) * 160,
+                                                 height:
+(value/maxValue)*160,
 
                                                   decoration: BoxDecoration(
                                                     color: AppColors.accent
@@ -187,10 +210,11 @@ class UsageChart extends StatelessWidget {
   }
 
   // ================= BAGIAN Y-AXIS =================
-  Widget _buildYAxis() {
-    final maxValue = data.reduce((a, b) => a > b ? a : b);
-    final step = (maxValue / 5);
-    return SizedBox(
+ Widget _buildYAxis(double maxValue) {
+
+  final step = maxValue / 5;
+
+  return SizedBox(
       width: 40,
       child: Column(
         children: List.generate(6, (index) {
