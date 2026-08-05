@@ -7,14 +7,14 @@ import 'package:amiflow/features/dashboard/presentation/node_detail_page.dart';
 import 'package:amiflow/features/dashboard/presentation/widgets/add_node_card.dart';
 import 'package:amiflow/features/dashboard/presentation/widgets/node_card.dart';
 import 'package:amiflow/features/dashboard/presentation/widgets/notification_bottom_sheet.dart';
-import 'package:amiflow/features/gateway/domain/entities/gateway.dart';
+// import 'package:amiflow/features/gateway/domain/entities/gateway.dart';
 import 'package:amiflow/shared/widgets/amiflow_header.dart';
 import 'package:flutter/material.dart';
 
 class DashboardPage extends StatefulWidget {
-  final Gateway gateway;
+  // final Gateway gateway;
 
-  const DashboardPage({super.key, required this.gateway});
+  // const DashboardPage({super.key, required this.gateway});
 
   @override
   State<DashboardPage> createState() => _DashboardPageState();
@@ -49,7 +49,8 @@ class _DashboardPageState extends State<DashboardPage> {
     });
     try {
       final data = await _api.fetchNodes(
-        widget.gateway.id,
+        // widget.gateway.id,
+        "1",
       ); // <-- ganti: dulu dari dummy, sekarang dari API
       setState(() {
         _nodes = data;
@@ -57,10 +58,13 @@ class _DashboardPageState extends State<DashboardPage> {
         _loading = false;
       });
       _applyFilter(); // terapkan pencarian jika ada teks tersisa
-    } catch (e) {
+    } catch (e, s) {
+      print(e);
+      print(s);
+
       setState(() {
-        _error = 'Gagal memuat data node. Cek koneksi / ngrok.';
         _loading = false;
+        _error = e.toString();
       });
     }
   }
@@ -210,7 +214,8 @@ class _DashboardPageState extends State<DashboardPage> {
 
                 try {
                   final baru = await _api.addNode(
-                    gatewayId: widget.gateway.id, // OTOMATIS dari gateway aktif
+                    // gatewayId:
+                    gatewayId: "1", // pake dummy dlu
                     kodeNode: hasil['kode']!,
                     namaPemilik: hasil['owner']!,
                     jumlahPenghuni: int.parse(hasil['jumlah']!),
@@ -245,7 +250,8 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget _buildBanner(BuildContext context) {
     return InkWell(
       borderRadius: BorderRadius.circular(20),
-      onTap: () => Navigator.pop(context),
+      // onTap: () => Navigator.pop(context),
+      onTap: null,
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 20),
         padding: const EdgeInsets.all(18),
@@ -270,7 +276,8 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    widget.gateway.name,
+                    // widget.gateway.name,
+                    'AMIFLOW Dashboard',
                     style: const TextStyle(
                       color: AppColors.accentSoft,
                       fontSize: 20,
@@ -279,12 +286,14 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    widget.gateway.gatewayCode,
+                    // widget.gateway.gatewayCode,
+                    'ThingsBoard Connected',
                     style: const TextStyle(color: Colors.white54, fontSize: 12),
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Klik untuk mengganti gateway',
+                    // 'Klik untuk mengganti gateway',
+                    'Monitoring Seluruh Node',
                     style: TextStyle(color: Colors.white38, fontSize: 11),
                   ),
                 ],

@@ -17,6 +17,8 @@ import 'package:amiflow/features/dashboard/presentation/widgets/remove_node_dial
 import 'package:amiflow/features/dashboard/data/datasources/history_remote_datasource.dart';
 import 'package:amiflow/features/dashboard/data/repositories/history_repository_impl.dart';
 import 'package:amiflow/features/dashboard/domain/usecases/get_daily_history.dart';
+import 'package:amiflow/features/dashboard/domain/entities/node.dart';
+import 'package:amiflow/features/dashboard/domain/entities/node_detail.dart';
 
 class NodeDetailPage extends StatefulWidget {
   final Node node;
@@ -29,6 +31,11 @@ class NodeDetailPage extends StatefulWidget {
 class _NodeDetailPageState extends State<NodeDetailPage> {
   final NodeApi _api = NodeApi(); // tambahkan di atas, sebagai field kelas
   late Node _node;
+  NodeDetail? _detail;
+
+  bool _loadingDetail = true;
+
+  String? _detailError;
   late bool _valveOpen;
   late final GetDailyHistory _getDailyHistory;
   List<UsageHistory> _dailyHistory = [];
@@ -46,6 +53,7 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
     _valveOpen = _node.valveOpen;
 
     _loadKlasifikasi();
+    _loadNodeDetail();
 
     Future<void> _loadHistory() async {
       try {
@@ -110,6 +118,37 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
       });
     } catch (e) {
       debugPrint('Gagal memuat klasifikasi: $e');
+    }
+  }
+
+  Future<void> _loadNodeDetail() async {
+    setState(() {
+      _loadingDetail = true;
+      _detailError = null;
+    });
+
+    try {
+      final detail = await _api.fetchNodeDetail(_node.id);
+
+      if (!mounted) return;
+
+      setState(() {
+        _detail = detail;
+        _valveOpen = detail.telemetry.valveOpen;
+        _loadingDetail = false;
+      });
+
+      debugPrint("Volume = ${_detail?.telemetry.volume}");
+      debugPrint("Flow = ${_detail?.telemetry.flow}");
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _detailError = e.toString();
+        _loadingDetail = false;
+      });
+
+      debugPrint("Gagal mengambil latest telemetry: $e");
     }
   }
 
@@ -281,6 +320,11 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
 
   Widget _buildHeader() {
     final node = _node;
+    final owner = _detail?.owner ?? _node.owner;
+
+    final totalUsers = _detail?.totalUsers ?? _node.totalUsers;
+
+    final code = _detail?.code ?? _node.code;
     return Row(
       children: [
         IconButton(
@@ -302,15 +346,15 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
               ),
               const SizedBox(height: 4),
               Text(
-                'Pemilik : ${node.owner}',
+                'Pemilik : $owner',
                 style: const TextStyle(color: Colors.white60, fontSize: 12),
               ),
               Text(
-                'Pengguna : ${node.totalUsers} Orang',
+                'Pengguna : $totalUsers Orang',
                 style: const TextStyle(color: Colors.white60, fontSize: 12),
               ),
               Text(
-                'ID : ${node.code}',
+                'ID : $code',
                 style: const TextStyle(color: AppColors.accent, fontSize: 12),
               ),
             ],
@@ -360,13 +404,23 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
 
   Widget _buildFlowCard() {
     final node = _node;
+    final volume = _detail?.telemetry.volume ?? node.waterUsageM3;
+
+    final valve = _detail?.telemetry.valveOpen ?? node.valveOpen;
+
+    // final status =
+    //     _detail?.statusPenggunaan.kategori ??
+    //     node.usageStatus;
 
     // Sumber data: hasil KlasifikasiController kalau sudah ada,
     // fallback ke nilai lokal Node selagi belum selesai fetch / fetch gagal.
     // Tampilan (layout, label, warna) tetap sama seperti sebelumnya.
     final String kategori =
         _klasifikasi?.kategori?.toUpperCase() ?? node.usageStatus;
-    final double totalVolume = _klasifikasi?.konsumsiM3 ?? node.waterUsageM3;
+    final double totalVolume =
+        _detail?.telemetry.volume ??
+        _klasifikasi?.konsumsiM3 ??
+        node.waterUsageM3;
 
     Color statusColor;
 
@@ -502,7 +556,7 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
   }
 
   Widget _buildUsageHistory() {
-    final histories = dummyDailyUsage;
+    final hasHistory = _currentHistory.isNotEmpty;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -515,7 +569,7 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
           const Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              'Riwayat Penggunaan',
+              "Riwayat Penggunaan",
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 18,
@@ -526,35 +580,63 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
 
           const SizedBox(height: 20),
 
-          UsageChart(
-            selectedFilter: _selectedFilter,
-            data: _chartData,
-            labels: _chartLabels,
-            onFilterChanged: (filter) {
-              setState(() {
-                _selectedFilter = filter;
-              });
-            },
-            onBarTap: (index) {
-              final history = _currentHistory[index];
+          if (!hasHistory)
+            Column(
+              children: const [
+                SizedBox(height: 40),
 
-              showModalBottomSheet(
-                context: context,
-                backgroundColor: Colors.transparent,
-                isScrollControlled: true,
-                builder: (_) {
-                  return ChartBottomSheet(
-                    history: history,
-                    filter: _selectedFilter,
-                    totalUsers: _node.totalUsers,
-                    totalUsage: _totalUsage,
-                  );
-                },
-              );
-            },
-          ),
+                Icon(Icons.bar_chart_rounded, color: Colors.white24, size: 70),
 
-          const SizedBox(height: 20),
+                SizedBox(height: 20),
+
+                Text(
+                  "Belum ada riwayat penggunaan",
+                  style: TextStyle(color: Colors.white54, fontSize: 16),
+                ),
+
+                SizedBox(height: 8),
+
+                Text(
+                  "Data chart akan muncul ketika telemetry tersedia.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.white38),
+                ),
+
+                SizedBox(height: 40),
+              ],
+            )
+          else
+            UsageChart(
+              selectedFilter: _selectedFilter,
+              data: _chartData,
+              labels: _chartLabels,
+              onFilterChanged: (filter) {
+                setState(() {
+                  _selectedFilter = filter;
+                });
+              },
+              onBarTap: (index) {
+                if (index >= _currentHistory.length) {
+                  return;
+                }
+
+                final history = _currentHistory[index];
+
+                showModalBottomSheet(
+                  context: context,
+                  backgroundColor: Colors.transparent,
+                  isScrollControlled: true,
+                  builder: (_) {
+                    return ChartBottomSheet(
+                      history: history,
+                      filter: _selectedFilter,
+                      totalUsers: _node.totalUsers,
+                      totalUsage: _totalUsage,
+                    );
+                  },
+                );
+              },
+            ),
         ],
       ),
     );

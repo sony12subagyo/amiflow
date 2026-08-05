@@ -3,10 +3,15 @@ import 'package:amiflow/features/dashboard/domain/entities/klasifikasi.dart';
 import 'package:http/http.dart' as http;
 import 'package:amiflow/core/config/app_config.dart';
 import 'package:amiflow/features/dashboard/domain/entities/node.dart';
+import 'package:amiflow/features/dashboard/domain/entities/node_detail.dart';
 
 class NodeApi {
   Future<List<Node>> fetchNodes(String gatewayId) async {
-    final url = Uri.parse('${AppConfig.baseUrl}/gateways/$gatewayId/nodes');
+    // sementara gatewayId belum dipakai
+    // nanti backend tinggal menambahkan endpoint
+    // /api/tb/gateways/{id}/nodes
+
+    final url = Uri.parse('${AppConfig.baseUrl}/tb/nodes');
 
     final response = await http.get(
       url,
@@ -16,13 +21,47 @@ class NodeApi {
       },
     );
 
+    print("STATUS = ${response.statusCode}");
+    print(response.body);
+
     if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
-      return data.map((json) => Node.fromJson(json)).toList();
-    } else {
-      throw Exception('Gagal memuat node (${response.statusCode})');
+      final body = jsonDecode(response.body);
+
+      final List<dynamic> data = body['data'];
+      print(data);
+
+      final nodes = data.map((e) => Node.fromJson(e)).toList();
+
+      /// sementara filter di Flutter
+      return nodes.where((node) => node.gatewayId == gatewayId).toList();
     }
+
+    throw Exception('Gagal memuat node (${response.statusCode})');
   }
+
+ Future<NodeDetail> fetchNodeDetail(String nodeId) async {
+  final url = Uri.parse(
+    '${AppConfig.baseUrl}/tb/nodes/$nodeId',
+  );
+
+  final response = await http.get(
+    url,
+    headers: {
+      'Accept': 'application/json',
+      'ngrok-skip-browser-warning': 'true',
+    },
+  );
+
+  if (response.statusCode == 200) {
+    final body = jsonDecode(response.body);
+
+    return NodeDetail.fromJson(body['data']);
+  }
+
+  throw Exception(
+    'Gagal memuat detail node (${response.statusCode})',
+  );
+}
 
   Future<void> deleteNode(String id) async {
     final url = Uri.parse('${AppConfig.baseUrl}/nodes/$id');

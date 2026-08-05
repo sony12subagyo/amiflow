@@ -1,73 +1,74 @@
-// lib/features/dashboard/domain/entities/node.dart
+import 'telemetry.dart';
 
 class Node {
   final String id;
+  final String gatewayId;
 
-  /// ID LoRa / Device
+  /// Kode node (NODE 01)
   final String code;
-
-  /// Status koneksi node
-  final bool online;
 
   /// Nama pemilik
   final String owner;
 
-  /// Jumlah pengguna air
+  /// Jumlah penghuni
   final int totalUsers;
 
-  /// Total penggunaan air (m³)
-  final double waterUsageM3;
+  /// Status aktif
+  final bool active;
 
-  /// Debit air tertinggi (L/min)
-  final double peakFlow;
+  /// Status online
+  final bool online;
 
-  /// Status valve
-  final bool valveOpen;
+  /// Data telemetry
+  final Telemetry? telemetry;
 
   const Node({
     required this.id,
+    required this.gatewayId,
     required this.code,
-    required this.online,
     required this.owner,
     required this.totalUsers,
-    required this.waterUsageM3,
-    required this.peakFlow,
-    required this.valveOpen,
+    required this.active,
+    required this.online,
+    this.telemetry,
   });
 
   factory Node.fromJson(Map<String, dynamic> json) {
     return Node(
-      id: json['id'] as String,
-      code: json['code'] as String,
-      online: json['online'] as bool,
-      owner: json['owner'] as String,
-      totalUsers: json['totalUsers'] as int,
-      waterUsageM3: (json['waterUsageM3'] as num).toDouble(),
-      peakFlow: (json['peakFlow'] as num).toDouble(),
-      valveOpen: json['valveOpen'] as bool,
+      id: json['id'].toString(),
+      gatewayId: json['gateway_id'].toString(),
+      code: json['kode_node'] ?? '',
+      owner: json['nama_pemilik'] ?? '',
+      totalUsers: json['jumlah_penghuni'] ?? 0,
+      active: (json['aktif'] ?? 0) == 1,
+      online: (json['online'] ?? 0) == 1,
+      telemetry: json['telemetry'] != null
+          ? Telemetry.fromJson(json['telemetry'])
+          : null,
     );
   }
 
-  /// ============================================
-  /// Penggunaan normal air
-  ///
-  /// Standar:
-  /// 1 orang = 60 Liter/hari
-  /// 1 orang = 1800 Liter/bulan
-  /// 1000 Liter = 1 m³
-  /// ============================================
+  /// ==========================
+  /// Shortcut Telemetry
+  /// ==========================
+
+  double get waterUsageM3 => telemetry?.volume ?? 0;
+
+  double get peakFlow => telemetry?.flow ?? 0;
+
+  bool get valveOpen => telemetry?.valveOpen ?? false;
+
+  /// ==========================
+  /// Normal Usage
+  /// ==========================
 
   double get normalUsageM3 {
     return (totalUsers * 1800) / 1000;
   }
 
-  /// ============================================
-  /// Status penggunaan air
-  ///
-  /// Hemat
-  /// Normal
-  /// Boros
-  /// ============================================
+  /// ==========================
+  /// Status Penggunaan
+  /// ==========================
 
   String get usageStatus {
     final normal = normalUsageM3;
