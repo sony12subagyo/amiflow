@@ -74,22 +74,7 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
     _getDailyHistory = GetDailyHistory(repository);
     _loadDailyHistory();
   }
-  //IN YANG BENER
-  // Default: bulan berjalan. Ganti di sini kalau nanti ada filter periode.
-  // Future<void> _loadKlasifikasi() async {
-  //   final now = DateTime.now();
-  //   try {
-  //     final hasil = await _api.fetchKlasifikasi(widget.node.id, now.year, now.month);
-  //     if (!mounted) return;
-  //     setState(() {
-  //       _klasifikasi = hasil;
-  //     });
-  //   } catch (e) {
-  //     // Diamkan -- tampilan tetap pakai fallback lokal, tidak mengubah UI.
-  //     debugPrint('Gagal memuat klasifikasi: $e');
-  //   }
-  // }
-
+ 
   //INI NYOBA AJA
   Future<void> _loadKlasifikasi() async {
     try {

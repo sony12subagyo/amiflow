@@ -65,7 +65,7 @@ class UsageChart extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: !hasData
-                    ? const Center(
+                    ? Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -78,10 +78,22 @@ class UsageChart extends StatelessWidget {
                             SizedBox(height: 12),
 
                             Text(
-                              "Belum ada riwayat penggunaan",
+                              _getEmptyTitle(),
                               style: TextStyle(
                                 color: Colors.white54,
                                 fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+
+                            SizedBox(height: 8),
+
+                            Text(
+                              _getEmptySubtitle(),
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.white38,
+                                fontSize: 12,
                               ),
                             ),
                           ],
@@ -267,5 +279,31 @@ class UsageChart extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _getEmptyTitle() {
+    switch (selectedFilter) {
+      case ChartFilter.day:
+        return "Belum ada riwayat harian";
+      case ChartFilter.week:
+        return "Belum ada riwayat mingguan";
+      case ChartFilter.month:
+        return "Belum ada riwayat bulanan";
+      case ChartFilter.year:
+        return "Belum ada riwayat tahunan";
+    }
+  }
+
+  String _getEmptySubtitle() {
+    switch (selectedFilter) {
+      case ChartFilter.day:
+        return "Data akan muncul ketika telemetry harian tersedia.";
+      case ChartFilter.week:
+        return "Data akan muncul setelah penggunaan mencakup minimal satu minggu.";
+      case ChartFilter.month:
+        return "Data akan muncul setelah penggunaan mencakup minimal satu bulan.";
+      case ChartFilter.year:
+        return "Data akan muncul setelah penggunaan mencakup minimal satu tahun.";
+    }
   }
 }
