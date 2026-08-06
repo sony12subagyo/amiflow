@@ -61,12 +61,19 @@ class Node {
     );
   }
 
-  /// Dipakai untuk endpoint BARU (/api/tb/gateways/{id}), bentuknya
-  /// snake_case dan menyertakan telemetry + status_penggunaan bawaan
-  /// ThingsBoard/StatusPenggunaanService -- INI yang jadi sumber kategori.
+  /// Dipakai untuk endpoint BARU -- mendukung DUA bentuk respons:
+  ///  (a) /api/tb/nodes         -> telemetry & jumlah_penghuni bersarang
+  ///  (b) /api/tb/gateways/{id} -> kategori & flow_terkini di level atas,
+  ///      TANPA telemetry/status_penggunaan/jumlah_penghuni/kode_node.
+  /// Kalau field nested ada dipakai duluan, kalau tidak fallback ke versi flat.
   factory Node.fromTbJson(Map<String, dynamic> json) {
     final telemetry = json['telemetry'] as Map<String, dynamic>?;
     final status = json['status_penggunaan'] as Map<String, dynamic>?;
+
+    final String? flowValue =
+        telemetry?['flow']?.toString() ?? json['flow_terkini']?.toString();
+    final String? kategoriValue =
+        status?['kategori']?.toString() ?? json['kategori']?.toString();
 
     return Node(
       id: json['id'].toString(),
@@ -77,12 +84,10 @@ class Node {
       // waterUsageM3/peakFlow dari cara lama sudah tidak dipakai lagi
       // di jalur ini -- konsumsi resmi ada di status?['konsumsi_liter'].
       waterUsageM3: 0,
-      peakFlow: telemetry?['flow'] != null
-          ? double.tryParse(telemetry!['flow'].toString()) ?? 0
-          : 0,
+      peakFlow: flowValue != null ? double.tryParse(flowValue) ?? 0 : 0,
       valveOpen: telemetry?['valve']?.toString() == '1',
-      kategori: status?['kategori']?.toString(),
-      flowTerkini: telemetry?['flow']?.toString(),
+      kategori: kategoriValue,
+      flowTerkini: flowValue,
     );
   }
 

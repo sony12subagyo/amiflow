@@ -87,7 +87,7 @@ class NodeCard extends StatelessWidget {
                 Text(
                   node.online ? 'ONLINE' : 'OFFLINE',
                   style: TextStyle(
-                    color: node.online ? Colors.white70 : AppColors.offline,
+                    color: node.online ? AppColors.accent : AppColors.offline,
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
                   ),

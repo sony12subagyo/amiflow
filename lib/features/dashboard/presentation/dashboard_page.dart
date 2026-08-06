@@ -48,10 +48,14 @@ class _DashboardPageState extends State<DashboardPage> {
       _error = null;
     });
     try {
-      final data = await _api.fetchNodes(
+      // fetchNodesFromGateway() -- BUKAN fetchNodes() -- karena endpoint
+      // lama (/gateways/{id}/nodes) membaca status `online` LANGSUNG dari
+      // kolom database (bisa basi), sementara endpoint baru ini selalu
+      // mengecek live ke ThingsBoard (lihat ThingsBoardGatewayController).
+      final data = await _api.fetchNodesFromGateway(
         // widget.gateway.id,
         "1",
-      ); // <-- ganti: dulu dari dummy, sekarang dari API
+      );
       setState(() {
         _nodes = data;
         _filtered = data;
