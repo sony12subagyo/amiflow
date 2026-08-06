@@ -41,7 +41,11 @@ class NodeDetail {
       owner: json['nama_pemilik'] ?? '',
       totalUsers: json['jumlah_penghuni'] ?? 0,
       active: (json['aktif'] ?? 0) == 1,
-      online: (json['online'] ?? 0) == 1,
+      // PENTING: backend mengirim `online` sebagai boolean ASLI
+      // (true/false), bukan angka 0/1 -- perbandingan `== 1` yang
+      // lama TIDAK PERNAH cocok dengan boolean, sehingga `online`
+      // selalu bernilai false apa pun kondisi node sesungguhnya.
+      online: json['online'] == true || json['online'] == 1,
       telemetry: Telemetry.fromJson(json['telemetry']),
       statusPenggunaan: StatusPenggunaan.fromJson(
         json['status_penggunaan'],

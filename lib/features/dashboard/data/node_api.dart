@@ -172,7 +172,11 @@ class NodeApi {
     }
   }
 
-  Future<void> updateValve({
+  /// Kirim perintah valve lewat SHARED ATTRIBUTE (bukan RPC lagi) --
+  /// terbukti dari pengamatan nyata: fitur Jadwal (yang juga pakai shared
+  /// attribute) diterapkan CEPAT oleh firmware, sementara RPC baru
+  /// diproses saat device check-in berkala (bisa ~15 menit).
+  Future<Map<String, dynamic>> updateValve({
     required String deviceId,
     required bool open,
   }) async {
@@ -190,7 +194,7 @@ class NodeApi {
       body: jsonEncode({'open': open}),
     );
 
-    print("=== UPDATE VALVE ===");
+    print("=== UPDATE VALVE (shared attribute) ===");
     print("Device ID : $deviceId");
     print("Status    : ${response.statusCode}");
     print(response.body);
@@ -198,6 +202,8 @@ class NodeApi {
     if (response.statusCode != 200) {
       throw Exception('Gagal mengirim perintah valve (${response.statusCode})');
     }
+
+    return jsonDecode(response.body) as Map<String, dynamic>;
   }
 
   /// Ambil hasil klasifikasi Hemat/Normal/Boros dari KlasifikasiController.

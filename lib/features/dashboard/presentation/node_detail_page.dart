@@ -74,7 +74,22 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
     _getDailyHistory = GetDailyHistory(repository);
     _loadDailyHistory();
   }
- 
+  //IN YANG BENER
+  // Default: bulan berjalan. Ganti di sini kalau nanti ada filter periode.
+  // Future<void> _loadKlasifikasi() async {
+  //   final now = DateTime.now();
+  //   try {
+  //     final hasil = await _api.fetchKlasifikasi(widget.node.id, now.year, now.month);
+  //     if (!mounted) return;
+  //     setState(() {
+  //       _klasifikasi = hasil;
+  //     });
+  //   } catch (e) {
+  //     // Diamkan -- tampilan tetap pakai fallback lokal, tidak mengubah UI.
+  //     debugPrint('Gagal memuat klasifikasi: $e');
+  //   }
+  // }
+
   //INI NYOBA AJA
   Future<void> _loadKlasifikasi() async {
     try {
@@ -213,25 +228,38 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
     });
 
     try {
-      await _api.updateValve(deviceId: _detail!.tbDeviceId, open: statusBaru);
+      final hasil = await _api.updateValve(
+        deviceId: _detail!.tbDeviceId,
+        open: statusBaru,
+      );
 
       if (!mounted) return;
 
+      final bool terkirim = hasil['terkirim'] == true;
+
+      String pesan;
+      Color warna;
+
+      if (terkirim) {
+        // Shared attribute -- terbukti diterapkan CEPAT oleh firmware
+        // (beda dari RPC yang baru diproses saat check-in berkala).
+        pesan = statusBaru
+            ? "Perintah buka valve terkirim ke perangkat."
+            : "Perintah tutup valve terkirim ke perangkat.";
+        warna = Colors.green;
+      } else {
+        pesan = "Gagal mengirim perintah valve.";
+        warna = Colors.red;
+        setState(() => _valveOpen = !statusBaru);
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            statusBaru
-                ? "Perintah membuka valve dikirim"
-                : "Perintah menutup valve dikirim",
-          ),
-        ),
+        SnackBar(content: Text(pesan), backgroundColor: warna),
       );
 
-      // Nanti kalau node sudah online bisa diaktifkan lagi
-      await Future.delayed(const Duration(seconds: 1));
-      print("Sebelum reload : $_valveOpen");
-      await _loadNodeDetail();
-      print("Sesudah reload : ${_detail?.telemetry.valveOpen}");
+      // TIDAK auto-reload cepat lagi -- kalau ternyata attribute juga
+      // butuh sedikit waktu, reload manual (buka ulang halaman) lebih
+      // aman daripada auto-reload yang bisa salah menampilkan data lama.
     } catch (e) {
       // ===========================
       // Kalau gagal, balikin UI
