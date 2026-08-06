@@ -2,9 +2,7 @@
 import 'package:amiflow/core/theme/app_colors.dart';
 import 'package:amiflow/features/dashboard/data/node_api.dart'; // <-- BARU (ganti dummy_nodes)
 import 'package:amiflow/features/dashboard/domain/entities/node.dart';
-import 'package:amiflow/features/dashboard/presentation/add_node_dialog.dart';
 import 'package:amiflow/features/dashboard/presentation/node_detail_page.dart';
-import 'package:amiflow/features/dashboard/presentation/widgets/add_node_card.dart';
 import 'package:amiflow/features/dashboard/presentation/widgets/node_card.dart';
 import 'package:amiflow/features/dashboard/presentation/widgets/notification_bottom_sheet.dart';
 // import 'package:amiflow/features/gateway/domain/entities/gateway.dart';
@@ -213,8 +211,7 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget _buildBanner(BuildContext context) {
     return InkWell(
       borderRadius: BorderRadius.circular(20),
-      // onTap: () => Navigator.pop(context),
-      onTap: null,
+      onTap: () => Navigator.pop(context),
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 20),
         padding: const EdgeInsets.all(18),

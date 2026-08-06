@@ -4,7 +4,6 @@ import 'package:amiflow/features/profile/presentation/edit_profile_bottom_sheet.
 import 'package:flutter/material.dart';
 import 'package:amiflow/core/theme/app_colors.dart';
 import 'package:amiflow/features/profile/data/dummy_profile.dart';
-import 'package:amiflow/features/profile/presentation/widgets/profile_badge.dart';
 import 'package:amiflow/features/profile/presentation/widgets/profile_tile.dart';
 import 'package:amiflow/shared/widgets/amiflow_header.dart';
 
