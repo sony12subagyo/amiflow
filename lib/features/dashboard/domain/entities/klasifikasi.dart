@@ -4,13 +4,16 @@
 ///
 /// Backend bisa mengembalikan 3 bentuk respons berbeda:
 /// - 400: data < 2 baris -> [kategori] null, field lain kosong
-/// - 202: ML belum aktif (< 30 hari kalender data) -> [kategori] null,
+/// - 202: ML belum aktif (< 90% hari kalender data) -> [kategori] null,
 ///        [hariTerekam] terisi, field konsumsi/batas null
 /// - 200: klasifikasi lengkap -> semua field terisi
 class Klasifikasi {
   final String? kategori; // null selama belum bisa diklasifikasi
   final int hariTerekam;
-  final double? konsumsiM3;
+
+  /// SATUAN LITER (bukan m3) -- backend mengirim key `konsumsi_liter`
+  /// sejak ambang batas Hemat/Normal/Boros diubah ke satuan liter.
+  final double? konsumsiLiter;
   final double? batasHemat;
   final double? batasBoros;
   final bool? relayDimatikan;
@@ -19,7 +22,7 @@ class Klasifikasi {
   const Klasifikasi({
     required this.kategori,
     required this.hariTerekam,
-    required this.konsumsiM3,
+    required this.konsumsiLiter,
     required this.batasHemat,
     required this.batasBoros,
     required this.relayDimatikan,
@@ -33,7 +36,10 @@ class Klasifikasi {
     return Klasifikasi(
       kategori: json['kategori'] as String?,
       hariTerekam: (json['hari_terekam'] as num?)?.toInt() ?? 0,
-      konsumsiM3: (json['konsumsi_m3'] as num?)?.toDouble(),
+      // Sebelumnya membaca 'konsumsi_m3' -- key itu SUDAH TIDAK ADA lagi
+      // di respons backend (diganti 'konsumsi_liter'), sehingga field ini
+      // selalu bernilai null tanpa disadari.
+      konsumsiLiter: (json['konsumsi_liter'] as num?)?.toDouble(),
       batasHemat: (json['batas_hemat'] as num?)?.toDouble(),
       batasBoros: (json['batas_boros'] as num?)?.toDouble(),
       relayDimatikan: json['relay_dimatikan'] as bool?,

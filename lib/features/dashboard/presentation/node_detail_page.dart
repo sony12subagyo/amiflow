@@ -292,6 +292,12 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
         _valveOpen = updatedNode.valveOpen;
       });
 
+      // PENTING: _buildHeader() membaca dari `_detail` (bukan `_node`)
+      // untuk nama pemilik & jumlah pengguna. Tanpa baris ini, `_detail`
+      // tetap berisi data LAMA sampai halaman dibuka ulang, sehingga
+      // header terlihat belum berubah walau `_node` sudah ter-update.
+      await _loadNodeDetail();
+
       if (!mounted) return;
 
       ScaffoldMessenger.of(
@@ -426,18 +432,19 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
 
     final valve = _detail?.telemetry.valveOpen ?? node.valveOpen;
 
-    // final status =
-    //     _detail?.statusPenggunaan.kategori ??
-    //     node.usageStatus;
-
-    // Sumber data: hasil KlasifikasiController kalau sudah ada,
-    // fallback ke nilai lokal Node selagi belum selesai fetch / fetch gagal.
-    // Tampilan (layout, label, warna) tetap sama seperti sebelumnya.
+    // Sumber data: hasil KlasifikasiController (konsumsi BULANAN resmi,
+    // satuan LITER) kalau sudah ada -- INI diprioritaskan, bukan telemetry
+    // instan. Sebelumnya urutan fallback terbalik: telemetry.volume
+    // (non-nullable) selalu menang duluan, sehingga angka konsumsi bulanan
+    // resmi tidak pernah terpakai, dan yang tampil malah pembacaan
+    // sesaat meteran (bisa 3 digit desimal & keliru diberi label "m3").
     final String kategori =
         _klasifikasi?.kategori?.toUpperCase() ?? node.usageStatus;
-    final double totalVolume =
+
+    final bool adaKonsumsiResmi = _klasifikasi?.konsumsiLiter != null;
+    final double totalVolumeLiter =
+        _klasifikasi?.konsumsiLiter ??
         _detail?.telemetry.volume ??
-        _klasifikasi?.konsumsiM3 ??
         node.waterUsageM3;
 
     Color statusColor;
@@ -455,9 +462,11 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
         statusColor = Colors.orangeAccent;
     }
 
-    final volumeText = totalVolume < 1
-        ? totalVolume.toStringAsFixed(3)
-        : totalVolume.toStringAsFixed(2);
+    // Dikonversi ke m3 (1 m3 = 1000 liter), 3 desimal -- contoh: 10 L jadi
+    // 0.010 m3, 6 L jadi 0.006 m3. Ditambah padLeft supaya selalu 3 digit
+    // di depan koma juga (format "000.000"), contoh: 0.630 -> "000.630".
+    final double totalVolumeM3 = totalVolumeLiter / 1000;
+    final volumeText = totalVolumeM3.toStringAsFixed(3).padLeft(7, '0');
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
@@ -491,6 +500,15 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
             "m³",
             style: TextStyle(color: Colors.white60, fontSize: 16),
           ),
+
+          if (!adaKonsumsiResmi)
+            const Padding(
+              padding: EdgeInsets.only(top: 4),
+              child: Text(
+                "(pembacaan sesaat, belum konsumsi bulanan resmi)",
+                style: TextStyle(color: Colors.white38, fontSize: 10),
+              ),
+            ),
 
           const SizedBox(height: 22),
 

@@ -86,12 +86,22 @@ class Node {
     );
   }
 
+  /// Penggunaan normal per bulan dalam LITER (bukan m3) -- 1800 liter/
+  /// orang/bulan, mengikuti standar yang sama dipakai backend
+  /// (StatusPenggunaanService, ambang 1799/1851 liter per orang).
+  /// Dipakai sebagai angka pembanding di UI selagi hasil resmi
+  /// (Klasifikasi.konsumsiLiter) belum selesai dimuat.
+  double get normalUsageLiter => totalUsers * 1800.0;
+
+  /// @deprecated -- disisakan untuk kompatibilitas kode lama yang masih
+  /// memakai satuan m3. Pakai normalUsageLiter untuk tampilan baru.
+  double get normalUsageM3 => normalUsageLiter / 1000;
+
   /// @deprecated JANGAN dipakai lagi -- ini hitungan lokal yang bisa
   /// beda hasil dari backend (StatusPenggunaanService). Pakai `kategori`
   /// (dari Node.fromTbJson) atau hasil fetchKlasifikasi() sebagai gantinya.
-  double get normalUsageM3 => (totalUsers * 1800) / 1000;
-
-  /// @deprecated lihat catatan di atas.
+  /// PENTING: dibandingkan dengan normalUsageM3 (bukan normalUsageLiter)
+  /// karena waterUsageM3 memang bersatuan m3, bukan liter.
   String get usageStatus {
     final normal = normalUsageM3;
     final lower = normal * 0.9;
