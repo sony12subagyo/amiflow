@@ -172,10 +172,11 @@ class NodeApi {
     }
   }
 
-  /// Kirim perintah valve lewat SHARED ATTRIBUTE (bukan RPC lagi) --
-  /// terbukti dari pengamatan nyata: fitur Jadwal (yang juga pakai shared
-  /// attribute) diterapkan CEPAT oleh firmware, sementara RPC baru
-  /// diproses saat device check-in berkala (bisa ~15 menit).
+  /// Kirim perintah valve lewat RPC ('oneway' + persistent) -- TERBUKTI
+  /// firmware benar-benar menjalankan perintah lewat jalur ini (meski
+  /// delay sampai device check-in berikutnya, ~15 menit). Shared attribute
+  /// SUDAH DICOBA berjam-jam dan TIDAK PERNAH diterapkan firmware -- jadi
+  /// RPC ini yang jadi cara resmi untuk kontrol valve manual.
   Future<Map<String, dynamic>> updateValve({
     required String deviceId,
     required bool open,
@@ -191,15 +192,16 @@ class NodeApi {
         'Content-Type': 'application/json',
         'ngrok-skip-browser-warning': 'true',
       },
-      body: jsonEncode({'open': open}),
+      body: jsonEncode({'open': open, 'callType': 'oneway'}),
     );
 
-    print("=== UPDATE VALVE (shared attribute) ===");
+    print("=== UPDATE VALVE (RPC oneway) ===");
     print("Device ID : $deviceId");
     print("Status    : ${response.statusCode}");
     print(response.body);
 
-    if (response.statusCode != 200) {
+    // 202 bukan error -- itu jawaban jujur "alat tidak merespons".
+    if (response.statusCode != 200 && response.statusCode != 202) {
       throw Exception('Gagal mengirim perintah valve (${response.statusCode})');
     }
 

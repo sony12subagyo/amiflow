@@ -235,18 +235,24 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
 
       if (!mounted) return;
 
+      final bool deviceOffline = hasil['deviceOffline'] == true;
       final bool terkirim = hasil['terkirim'] == true;
 
       String pesan;
       Color warna;
 
-      if (terkirim) {
-        // Shared attribute -- terbukti diterapkan CEPAT oleh firmware
-        // (beda dari RPC yang baru diproses saat check-in berkala).
+      if (terkirim && !deviceOffline) {
+        // RPC oneway+persistent -- TERKIRIM ke ThingsBoard, tapi device
+        // check-in berkala, jadi baru benar-benar diterapkan saat
+        // check-in berikutnya (bisa sampai ~15 menit, ini TERBUKTI berhasil).
         pesan = statusBaru
-            ? "Perintah buka valve terkirim ke perangkat."
-            : "Perintah tutup valve terkirim ke perangkat.";
-        warna = Colors.green;
+            ? "Perintah buka valve terkirim. Diterapkan saat perangkat check-in berikutnya."
+            : "Perintah tutup valve terkirim. Diterapkan saat perangkat check-in berikutnya.";
+        warna = Colors.blue;
+      } else if (deviceOffline) {
+        pesan = "Alat tidak merespons. Perintah TIDAK terkirim.";
+        warna = Colors.orange;
+        setState(() => _valveOpen = !statusBaru);
       } else {
         pesan = "Gagal mengirim perintah valve.";
         warna = Colors.red;
