@@ -362,65 +362,57 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
   }
 
   Widget _buildHeader() {
-    final node = _node;
-    final owner = _detail?.owner ?? _node.owner;
+  final node = _node;
+  final owner = _detail?.owner ?? _node.owner;
+  final totalUsers = _detail?.totalUsers ?? _node.totalUsers;
+  // baris `final code = ...` boleh dihapus juga karena sudah tidak dipakai
 
-    final totalUsers = _detail?.totalUsers ?? _node.totalUsers;
-
-    final code = _detail?.code ?? _node.code;
-    return Row(
-      children: [
-        IconButton(
-          onPressed: _back,
-          icon: const Icon(Icons.arrow_back, color: AppColors.accentSoft),
-        ),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 4),
-              Text(
-                '${node.id} Detail',
-                style: const TextStyle(
-                  color: AppColors.accentSoft,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Pemilik : $owner',
-                style: const TextStyle(color: Colors.white60, fontSize: 12),
-              ),
-              Text(
-                'Pengguna : $totalUsers Orang',
-                style: const TextStyle(color: Colors.white60, fontSize: 12),
-              ),
-              Text(
-                'ID : $code',
-                style: const TextStyle(color: AppColors.accent, fontSize: 12),
-              ),
-            ],
-          ),
-        ),
-        Row(
+  return Row(
+    children: [
+      IconButton(
+        onPressed: _back,
+        icon: const Icon(Icons.arrow_back, color: AppColors.accentSoft),
+      ),
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // _buildStatusPill(node.online),
-            const SizedBox(width: 8),
-            IconButton(
-              tooltip: "Edit Node",
-              splashRadius: 22,
-              onPressed: () {
-                print("Edit diklik");
-                _showEditNodeSheet();
-              },
-              icon: const Icon(Icons.edit_outlined, color: AppColors.accent),
+            const SizedBox(height: 4),
+            Text(
+              'Detail',
+              style: const TextStyle(
+                color: AppColors.accentSoft,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
             ),
+            const SizedBox(height: 4),
+            Text(
+              'Pemilik : $owner',
+              style: const TextStyle(color: Colors.white60, fontSize: 12),
+            ),
+            Text(
+              'Pengguna : $totalUsers Orang',
+              style: const TextStyle(color: Colors.white60, fontSize: 12),
+            ),
+            // baris "ID : $code" dihapus
           ],
         ),
-      ],
-    );
-  }
+      ),
+      Row(
+        children: [
+          const SizedBox(width: 8),
+          IconButton(
+            tooltip: "Edit Node",
+            splashRadius: 22,
+            onPressed: _showEditNodeSheet,
+            icon: const Icon(Icons.edit_outlined, color: AppColors.accent),
+          ),
+        ],
+      ),
+    ],
+  );
+}
 
   Widget _buildStatusPill(bool online) {
     return Container(
