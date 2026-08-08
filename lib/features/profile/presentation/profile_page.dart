@@ -1,5 +1,6 @@
 // lib/features/profile/presentation/profile_page.dart
 import 'package:amiflow/core/auth/current_user.dart';
+import 'package:amiflow/core/auth/token_storage.dart';
 import 'package:amiflow/features/profile/presentation/edit_profile_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:amiflow/core/theme/app_colors.dart';
@@ -156,8 +157,10 @@ class _ProfilePageState extends State<ProfilePage> {
             borderRadius: BorderRadius.circular(18),
           ),
         ),
-        onPressed: () {
-          // Hapus semua halaman di stack, masuk ke login
+        onPressed: () async {
+          await TokenStorage.clear();
+          await CurrentUser.clear();
+          if (!context.mounted) return;
           Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);
         },
         icon: const Icon(Icons.logout),
