@@ -18,6 +18,7 @@ import 'package:amiflow/features/dashboard/data/datasources/history_remote_datas
 import 'package:amiflow/features/dashboard/data/repositories/history_repository_impl.dart';
 import 'package:amiflow/features/dashboard/domain/usecases/get_daily_history.dart';
 import 'package:amiflow/features/dashboard/domain/entities/node_detail.dart';
+import 'dart:async';
 
 class NodeDetailPage extends StatefulWidget {
   final Node node;
@@ -28,6 +29,7 @@ class NodeDetailPage extends StatefulWidget {
 }
 
 class _NodeDetailPageState extends State<NodeDetailPage> {
+  Timer? _refreshTimer;
   final NodeApi _api = NodeApi(); // tambahkan di atas, sebagai field kelas
   late Node _node;
   NodeDetail? _detail;
@@ -73,22 +75,12 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
 
     _getDailyHistory = GetDailyHistory(repository);
     _loadDailyHistory();
+
+    _refreshTimer = Timer.periodic(
+      const Duration(seconds: 5),
+      (_) => _loadNodeDetail(),
+    );
   }
-  //IN YANG BENER
-  // Default: bulan berjalan. Ganti di sini kalau nanti ada filter periode.
-  // Future<void> _loadKlasifikasi() async {
-  //   final now = DateTime.now();
-  //   try {
-  //     final hasil = await _api.fetchKlasifikasi(widget.node.id, now.year, now.month);
-  //     if (!mounted) return;
-  //     setState(() {
-  //       _klasifikasi = hasil;
-  //     });
-  //   } catch (e) {
-  //     // Diamkan -- tampilan tetap pakai fallback lokal, tidak mengubah UI.
-  //     debugPrint('Gagal memuat klasifikasi: $e');
-  //   }
-  // }
 
   //INI NYOBA AJA
   Future<void> _loadKlasifikasi() async {
@@ -138,6 +130,12 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
 
       debugPrint("Gagal mengambil latest telemetry: $e");
     }
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
   }
 
   double _flowRate = 12.8;
@@ -259,9 +257,9 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
         setState(() => _valveOpen = !statusBaru);
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(pesan), backgroundColor: warna),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(pesan), backgroundColor: warna));
 
       // TIDAK auto-reload cepat lagi -- kalau ternyata attribute juga
       // butuh sedikit waktu, reload manual (buka ulang halaman) lebih
@@ -362,57 +360,57 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
   }
 
   Widget _buildHeader() {
-  final node = _node;
-  final owner = _detail?.owner ?? _node.owner;
-  final totalUsers = _detail?.totalUsers ?? _node.totalUsers;
-  // baris `final code = ...` boleh dihapus juga karena sudah tidak dipakai
+    final node = _node;
+    final owner = _detail?.owner ?? _node.owner;
+    final totalUsers = _detail?.totalUsers ?? _node.totalUsers;
+    // baris `final code = ...` boleh dihapus juga karena sudah tidak dipakai
 
-  return Row(
-    children: [
-      IconButton(
-        onPressed: _back,
-        icon: const Icon(Icons.arrow_back, color: AppColors.accentSoft),
-      ),
-      Expanded(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 4),
-            Text(
-              'Detail',
-              style: const TextStyle(
-                color: AppColors.accentSoft,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
+    return Row(
+      children: [
+        IconButton(
+          onPressed: _back,
+          icon: const Icon(Icons.arrow_back, color: AppColors.accentSoft),
+        ),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 4),
+              Text(
+                'Detail',
+                style: const TextStyle(
+                  color: AppColors.accentSoft,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
+              const SizedBox(height: 4),
+              Text(
+                'Pemilik : $owner',
+                style: const TextStyle(color: Colors.white60, fontSize: 12),
+              ),
+              Text(
+                'Pengguna : $totalUsers Orang',
+                style: const TextStyle(color: Colors.white60, fontSize: 12),
+              ),
+              // baris "ID : $code" dihapus
+            ],
+          ),
+        ),
+        Row(
+          children: [
+            const SizedBox(width: 8),
+            IconButton(
+              tooltip: "Edit Node",
+              splashRadius: 22,
+              onPressed: _showEditNodeSheet,
+              icon: const Icon(Icons.edit_outlined, color: AppColors.accent),
             ),
-            const SizedBox(height: 4),
-            Text(
-              'Pemilik : $owner',
-              style: const TextStyle(color: Colors.white60, fontSize: 12),
-            ),
-            Text(
-              'Pengguna : $totalUsers Orang',
-              style: const TextStyle(color: Colors.white60, fontSize: 12),
-            ),
-            // baris "ID : $code" dihapus
           ],
         ),
-      ),
-      Row(
-        children: [
-          const SizedBox(width: 8),
-          IconButton(
-            tooltip: "Edit Node",
-            splashRadius: 22,
-            onPressed: _showEditNodeSheet,
-            icon: const Icon(Icons.edit_outlined, color: AppColors.accent),
-          ),
-        ],
-      ),
-    ],
-  );
-}
+      ],
+    );
+  }
 
   Widget _buildStatusPill(bool online) {
     return Container(
@@ -442,6 +440,8 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
     final volume = _detail?.telemetry.volume ?? node.waterUsageM3;
 
     final valve = _detail?.telemetry.valveOpen ?? node.valveOpen;
+
+    final flow = _detail?.telemetry.flow ?? 0;
 
     // Sumber data: hasil KlasifikasiController (konsumsi BULANAN resmi,
     // satuan LITER) kalau sudah ada -- INI diprioritaskan, bukan telemetry
@@ -498,18 +498,29 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
 
           const SizedBox(height: 12),
 
-          Text(
-            volumeText,
-            style: const TextStyle(
-              color: AppColors.accent,
-              fontSize: 54,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                volumeText,
+                style: const TextStyle(
+                  color: AppColors.accent,
+                  fontSize: 54,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
 
-          const Text(
-            "m³",
-            style: TextStyle(color: Colors.white60, fontSize: 16),
+              const SizedBox(width: 6),
+
+              const Padding(
+                padding: EdgeInsets.only(bottom: 8),
+                child: Text(
+                  "m³",
+                  style: TextStyle(color: Colors.white60, fontSize: 18),
+                ),
+              ),
+            ],
           ),
 
           if (!adaKonsumsiResmi)
@@ -523,6 +534,50 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
 
           const SizedBox(height: 22),
 
+          const SizedBox(height: 24),
+
+          const Text(
+            "Flow Rate",
+            style: TextStyle(
+              color: Colors.white54,
+              fontSize: 11,
+              letterSpacing: 1,
+            ),
+          ),
+
+          const SizedBox(height: 10),
+
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                flow.toStringAsFixed(2),
+                style: const TextStyle(
+                  color: AppColors.accent,
+                  fontSize: 34,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+              const SizedBox(width: 6),
+
+              const Padding(
+                padding: EdgeInsets.only(bottom: 5),
+                child: Text(
+                  "L/Min",
+                  style: TextStyle(color: Colors.white60, fontSize: 16),
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 24),
+
+          Divider(color: Colors.white10, thickness: 1),
+
+          const SizedBox(height: 18),
+
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             decoration: BoxDecoration(
@@ -534,7 +589,7 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
                 const SizedBox(width: 8),
 
                 const Text(
-                  "Penggunaan Normal Perbulan",
+                  "Penggunaan Normal/Bulan",
                   style: TextStyle(color: Colors.white70),
                 ),
 
