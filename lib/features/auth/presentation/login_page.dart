@@ -39,8 +39,10 @@ class _LoginPageState extends State<LoginPage> {
 
       final result = await _authApi.login(email, password);
 
-      TokenStorage.save(result.token); // simpan token (di memori)
-      CurrentUser.user = result.user;
+      // Simpan PERMANEN (bukan cuma di memori) -- supaya tidak perlu
+      // login ulang tiap aplikasi ditutup dan dibuka lagi.
+      await TokenStorage.save(result.token);
+      await CurrentUser.save(result.user);
       print(result.user.name);
       print(result.user.email);
 
