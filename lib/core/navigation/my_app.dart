@@ -1,5 +1,6 @@
 // lib/core/navigation/my_app.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:amiflow/features/auth/presentation/login_page.dart';
 import 'package:amiflow/core/navigation/main_screen.dart';
 
@@ -8,13 +9,16 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      initialRoute: '/login',
-      routes: {
-        '/login': (_) => const LoginPage(),
-        '/main': (_) => const MainScreen(),
-      },
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light,
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        initialRoute: '/login',
+        routes: {
+          '/login': (_) => const LoginPage(),
+          '/main': (_) => const MainScreen(),
+        },
+      ),
     );
   }
 }
