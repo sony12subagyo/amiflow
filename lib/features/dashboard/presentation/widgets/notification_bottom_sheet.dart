@@ -1,33 +1,68 @@
 import 'package:amiflow/core/theme/app_colors.dart';
-//import 'package:amiflow/features/dashboard/data/dummy_nodes.dart';
-import 'package:amiflow/features/dashboard/presentation/widgets/ml_alert_dialog.dart';
-import 'package:amiflow/features/dashboard/presentation/widgets/notification_card.dart';
-import 'package:flutter/material.dart';
-import 'package:amiflow/features/dashboard/domain/entities/node.dart';
+import 'package:amiflow/features/notification/data/notification_api.dart';
+import 'package:amiflow/features/notification/domain/entities/notification_item.dart';
+import 'package:amiflow/features/notification/presentation/widget/notification_card.dart';
+import 'package:amiflow/features/notification/presentation/widget/remove_notification_dialog.dart';
 
-class NotificationBottomSheet extends StatelessWidget {
+import 'package:flutter/material.dart';
+
+class NotificationBottomSheet extends StatefulWidget {
   const NotificationBottomSheet({super.key});
 
-  /// Dummy Notification
-  // static final List<Map<String, dynamic>> dummyNotifications = [
-  //   {
-  //     "node": dummyNodes[0],
-  //     "description": "Pemborosan selama 3 bulan berturut-turut.",
-  //     "time": "5 menit lalu",
-  //   },
+  @override
+  State<NotificationBottomSheet> createState() =>
+      _NotificationBottomSheetState();
+}
 
-  //   {
-  //     "node": dummyNodes[3],
-  //     "description": "Pemborosan selama 3 bulan berturut-turut.",
-  //     "time": "2 jam lalu",
-  //   },
+class _NotificationBottomSheetState extends State<NotificationBottomSheet> {
+  final _api = NotificationApi();
 
-  //   {
-  //     "node": dummyNodes[4],
-  //     "description": "Pemborosan selama 3 bulan berturut-turut.",
-  //     "time": "Kemarin",
-  //   },
-  // ];
+  List<NotificationItem> _items = [];
+  bool _loading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final data = await _api.fetchNotifications();
+      if (!mounted) return;
+      setState(() {
+        _items = data;
+        _loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = 'Gagal memuat notifikasi';
+        _loading = false;
+      });
+    }
+  }
+
+  void _onTapItem(NotificationItem item) {
+    // Sementara: tandai sudah dibaca saja. Kalau nanti mau munculkan
+    // dialog detail (mis. MlAlertDialog), sambungkan di sini.
+    _api.markAsRead(item.id);
+    setState(() {
+      _items = _items.map((n) {
+        if (n.id == item.id) {
+          return NotificationItem(
+            id: n.id,
+            nodeName: n.nodeName,
+            description: n.description,
+            time: n.time,
+            dibaca: true,
+          );
+        }
+        return n;
+      }).toList();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +99,7 @@ class NotificationBottomSheet extends StatelessWidget {
                 ),
                 SizedBox(width: 10),
                 Text(
-                  "Notifikasi Machine Learning",
+                  "Notifikasi Terbaru",
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 20,
@@ -79,38 +114,72 @@ class NotificationBottomSheet extends StatelessWidget {
 
           Divider(color: Colors.white.withOpacity(.08), height: 1),
 
-          //Expanded(
-            // child: ListView.builder(
-            //   padding: const EdgeInsets.symmetric(vertical: 10),
-            //   itemCount: dummyNotifications.length,
-            //   itemBuilder: (context, index) {
-            //     final item = dummyNotifications[index];
-            //     final node = item["node"] as Node;
-
-            //     return NotificationCard(
-            //       nodeName: node.id,
-            //       description: item["description"]!,
-            //       time: item["time"]!,
-            //       onTap: () {
-            //         showDialog(
-            //           context: context,
-            //           builder: (_) => MlAlertDialog(
-            //             node: node,
-            //             status: item["description"] as String,
-            //             recommendations: const [
-            //               "Periksa kondisi valve",
-            //               "Verifikasi jumlah pengguna",
-            //               "Perbarui jumlah pengguna bila diperlukan",
-            //             ],
-            //           ),
-            //         );
-            //       },
-            //     );
-            //   },
-            // ),
-          //),
+          Expanded(child: _buildBody()),
         ],
       ),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Text(_error!, style: const TextStyle(color: Colors.white70)),
+      );
+    }
+
+    if (_items.isEmpty) {
+      return const Center(
+        child: Text(
+          'Belum ada notifikasi',
+          style: TextStyle(color: Colors.white38),
+        ),
+      );
+    }
+    // ganti bagian itemBuilder di ListView.builder:
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      itemCount: _items.length,
+      itemBuilder: (context, index) {
+        final item = _items[index];
+        return Dismissible(
+          key: ValueKey(item.id),
+          direction: DismissDirection.endToStart,
+          confirmDismiss: (_) => showRemoveNotificationDialog(context),
+          onDismissed: (_) async {
+            try {
+              await _api.delete(item.id);
+            } catch (e) {
+              // Item sudah terlanjur hilang dari UI (dismissed). Kalau
+              // hapus di server gagal, cukup log -- reload berikutnya
+              // akan sinkron ulang otomatis.
+              debugPrint('Gagal menghapus notifikasi di server: $e');
+            }
+            setState(() {
+              _items.removeWhere((n) => n.id == item.id);
+            });
+          },
+          background: Container(
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppColors.danger.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: const Icon(Icons.delete, color: AppColors.danger),
+          ),
+          child: NotificationCard(
+            nodeName: item.nodeName,
+            description: item.description,
+            time: item.time,
+            onTap: () => _onTapItem(item),
+          ),
+        );
+      },
     );
   }
 }
