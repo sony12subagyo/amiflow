@@ -1,50 +1,39 @@
-// lib/core/navigation/my_app.dart
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:amiflow/features/auth/presentation/login_page.dart';
 import 'package:amiflow/core/navigation/main_screen.dart';
+import 'package:amiflow/core/auth/token_storage.dart';
+import 'package:amiflow/core/auth/current_user.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.light,
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        initialRoute: '/login',
-        routes: {
-          '/login': (_) => const LoginPage(),
-          '/main': (_) => const MainScreen(),
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: FutureBuilder<bool>(
+        future: _cekSesi(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState != ConnectionState.done) {
+            return const Scaffold(
+              backgroundColor: Colors.black,
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }
+          final sudahLogin = snapshot.data ?? false;
+          return sudahLogin ? const MainScreen() : const LoginPage();
         },
       ),
+      routes: {
+        '/login': (_) => const LoginPage(),
+        '/main': (_) => const MainScreen(),
+      },
     );
   }
+
+  Future<bool> _cekSesi() async {
+    final token = await TokenStorage.load(); // WAJIB dipanggil di sini
+    await CurrentUser.load();
+    return token != null && token.isNotEmpty;
+  }
 }
-
-
-// lib/core/navigation/my_app.dart
-// import 'package:amiflow/features/gateway/presentation/gateway_page.dart';
-// import 'package:flutter/material.dart';
-// import 'package:amiflow/features/auth/presentation/login_page.dart';
-// import 'package:amiflow/core/navigation/main_screen.dart';
-
-// class MyApp extends StatelessWidget {
-//   const MyApp({super.key});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return MaterialApp(
-//       debugShowCheckedModeBanner: false,
-//       // Gunakan GatewayPage sebagai halaman pertama (home)
-//       home: const GatewayPage(), 
-      
-//       // Tetap daftarkan rute lain agar bisa dinavigasikan nanti
-//       routes: {
-//         '/login': (_) => const LoginPage(),
-//         '/main': (_) => const MainScreen(),
-//       },
-//     );
-//   }
-// }

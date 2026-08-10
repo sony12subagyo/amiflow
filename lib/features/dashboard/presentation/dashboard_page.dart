@@ -1,6 +1,7 @@
 // lib/features/dashboard/presentation/dashboard_page.dart
 import 'package:amiflow/core/theme/app_colors.dart';
 import 'package:amiflow/features/dashboard/data/node_api.dart'; // <-- BARU (ganti dummy_nodes)
+import 'package:amiflow/features/notification/data/notification_api.dart'; // <-- BARU
 import 'package:amiflow/features/dashboard/domain/entities/node.dart';
 import 'package:amiflow/features/dashboard/presentation/node_detail_page.dart';
 import 'package:amiflow/features/dashboard/presentation/widgets/node_card.dart';
@@ -21,9 +22,11 @@ class DashboardPage extends StatefulWidget {
 class _DashboardPageState extends State<DashboardPage> {
   final _searchController = TextEditingController();
   final NodeApi _api = NodeApi(); // <-- BARU
+  final NotificationApi _notifApi = NotificationApi(); // <-- BARU
   List<Node> _nodes = [];
   List<Node> _filtered = [];
   String _query = '';
+  int _unreadCount = 0; // <-- BARU, ganti angka hardcode 2
 
   bool _loading = true; // <-- BARU
   String? _error; // <-- BARU
@@ -32,6 +35,19 @@ class _DashboardPageState extends State<DashboardPage> {
   void initState() {
     super.initState();
     _loadNodes(); // <-- ganti: dulu dari dummy, sekarang dari API
+    _loadUnreadCount(); // <-- BARU
+  }
+
+  // <-- BARU: ambil jumlah notifikasi belum dibaca dari server
+  Future<void> _loadUnreadCount() async {
+    try {
+      final count = await _notifApi.fetchUnreadCount();
+      if (!mounted) return;
+      setState(() => _unreadCount = count);
+    } catch (e) {
+      // gagal ambil unread count tidak perlu mengganggu tampilan utama,
+      // biarkan badge tetap di angka terakhir yang diketahui
+    }
   }
 
   @override
@@ -140,15 +156,16 @@ class _DashboardPageState extends State<DashboardPage> {
           child: Column(
             children: [
               AmiflowHeader(
-                notificationCount: 2,
+                notificationCount: _unreadCount, // <-- BARU, dari server
 
-                onNotificationTap: () {
-                  showModalBottomSheet(
+                onNotificationTap: () async {
+                  await showModalBottomSheet(
                     context: context,
                     backgroundColor: Colors.transparent,
                     isScrollControlled: true,
                     builder: (_) => const NotificationBottomSheet(),
                   );
+                  _loadUnreadCount(); // <-- BARU: refresh badge setelah ditutup
                 },
               ),
               _buildBanner(context),
