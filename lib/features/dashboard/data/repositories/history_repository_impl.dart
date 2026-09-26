@@ -11,4 +11,9 @@ class HistoryRepositoryImpl implements HistoryRepository {
   Future<List<UsageHistory>> getDailyHistory(String nodeId) async {
     return await remoteDataSource.getDailyHistory(nodeId);
   }
+
+  @override
+  Future<List<UsageHistory>> getWeeklyHistory(String nodeId) async {
+    return await remoteDataSource.getWeeklyHistory(nodeId);
+  }
 }

@@ -5,6 +5,7 @@ import 'package:amiflow/features/dashboard/domain/entities/chart_filter.dart';
 import 'package:amiflow/features/dashboard/domain/entities/klasifikasi.dart';
 import 'package:amiflow/features/dashboard/domain/entities/usage_history.dart';
 import 'package:amiflow/features/dashboard/domain/helpers/history_helper.dart';
+import 'package:amiflow/features/dashboard/domain/usecases/get_weekly_history.dart';
 import 'package:amiflow/features/dashboard/presentation/widgets/chart_detail_sheet.dart';
 import 'package:amiflow/features/dashboard/presentation/widgets/edit_node_bottom_sheet.dart';
 import 'package:amiflow/features/schedule/presentation/schedule_page.dart';
@@ -39,11 +40,11 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
   String? _detailError;
   late bool _valveOpen;
   late final GetDailyHistory _getDailyHistory;
-  List<UsageHistory> _dailyHistory = [];
+  late final GetWeeklyHistory _getWeeklyHistory;
 
-  // Hasil klasifikasi dari KlasifikasiController. Null selagi belum selesai
-  // di-fetch atau kalau fetch gagal -- tampilan tetap sama, cuma fallback
-  // diam-diam ke nilai lokal di Node (lihat _buildFlowCard).
+  List<UsageHistory> _dailyHistory = [];
+  List<UsageHistory> _weeklyHistory = [];
+
   Klasifikasi? _klasifikasi;
 
   @override
@@ -59,7 +60,6 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
     Future<void> _loadDailyHistory() async {
       try {
         final data = await _getDailyHistory(_node.id);
-
         if (!mounted) return;
 
         setState(() {
@@ -70,11 +70,27 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
       }
     }
 
+    Future<void> _loadWeeklyHistory() async {
+      try {
+        final data = await _getWeeklyHistory(_node.id);
+        if (!mounted) return;
+
+        setState(() {
+          _weeklyHistory = data;
+        });
+      } catch (e) {
+        debugPrint('Gagal mengambil histori mingguan: $e');
+      }
+    }
+
     final datasource = HistoryRemoteDataSource();
     final repository = HistoryRepositoryImpl(datasource);
 
     _getDailyHistory = GetDailyHistory(repository);
+    _getWeeklyHistory = GetWeeklyHistory(repository);
+
     _loadDailyHistory();
+    _loadWeeklyHistory();
 
     _refreshTimer = Timer.periodic(
       const Duration(seconds: 5),
@@ -157,7 +173,7 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
         return _dailyHistory;
 
       case ChartFilter.week:
-        return dummyWeeklyUsage;
+        return _weeklyHistory;
 
       case ChartFilter.month:
         return dummyMonthlyUsage;
@@ -174,7 +190,7 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
         return _currentHistory.map((e) => e.usageLiter).toList();
 
       case ChartFilter.week:
-        return [];
+        return _weeklyHistory.map((e) => e.usageLiter).toList();
 
       case ChartFilter.month:
         return [];
@@ -191,7 +207,7 @@ class _NodeDetailPageState extends State<NodeDetailPage> {
         return _currentHistory.map((history) => history.dayLabel).toList();
 
       case ChartFilter.week:
-        return [];
+        return _weeklyHistory.map((e) => 'M${e.week}').toList();
 
       case ChartFilter.month:
         return [];

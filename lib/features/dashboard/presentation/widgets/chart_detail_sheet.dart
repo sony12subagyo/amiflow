@@ -27,9 +27,7 @@ class ChartBottomSheet extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
       decoration: const BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(30),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
       ),
       child: SafeArea(
         top: false,
@@ -62,10 +60,7 @@ class ChartBottomSheet extends StatelessWidget {
 
             Text(
               _subtitle,
-              style: const TextStyle(
-                color: Colors.white54,
-                fontSize: 14,
-              ),
+              style: const TextStyle(color: Colors.white54, fontSize: 14),
             ),
 
             const SizedBox(height: 24),
@@ -108,10 +103,10 @@ class ChartBottomSheet extends StatelessWidget {
         return history.fullDate;
 
       case ChartFilter.week:
-        return history.fullDate; // nanti diganti Minggu ke-x
+        return "Minggu ${history.week ?? '-'}";
 
       case ChartFilter.month:
-        return history.fullDate; // nanti diganti Juli 2026
+        return history.fullDate;
 
       case ChartFilter.year:
         return history.fullDate;
@@ -128,7 +123,7 @@ class ChartBottomSheet extends StatelessWidget {
         return "Ringkasan Penggunaan Harian";
 
       case ChartFilter.week:
-        return "Ringkasan Penggunaan Mingguan";
+        return "${_formatWeekPeriod()}\nRingkasan Penggunaan Mingguan";
 
       case ChartFilter.month:
         return "Ringkasan Penggunaan Bulanan";
@@ -136,6 +131,37 @@ class ChartBottomSheet extends StatelessWidget {
       case ChartFilter.year:
         return "Ringkasan Penggunaan Tahunan";
     }
+  }
+
+  String _formatWeekPeriod() {
+    if (history.startDate == null || history.endDate == null) {
+      return "Periode tidak tersedia";
+    }
+
+    const months = [
+      "Januari",
+      "Februari",
+      "Maret",
+      "April",
+      "Mei",
+      "Juni",
+      "Juli",
+      "Agustus",
+      "September",
+      "Oktober",
+      "November",
+      "Desember",
+    ];
+
+    final start = history.startDate!;
+    final end = history.endDate!;
+
+    if (start.month == end.month) {
+      return "${start.day}–${end.day} ${months[start.month - 1]} ${start.year}";
+    }
+
+    return "${start.day} ${months[start.month - 1]}–"
+        "${end.day} ${months[end.month - 1]} ${end.year}";
   }
 
   ///========================
@@ -162,30 +188,21 @@ class ChartBottomSheet extends StatelessWidget {
     Color valueColor = AppColors.accent,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 14,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: AppColors.background,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         children: [
-          Icon(
-            icon,
-            color: AppColors.accent,
-          ),
+          Icon(icon, color: AppColors.accent),
 
           const SizedBox(width: 14),
 
           Expanded(
             child: Text(
               title,
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 15,
-              ),
+              style: const TextStyle(color: Colors.white70, fontSize: 15),
             ),
           ),
 

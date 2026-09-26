@@ -5,9 +5,17 @@ class UsageHistory {
   final DateTime date;
   final double usageLiter;
 
+  // Khusus data mingguan
+  final int? week;
+  final DateTime? startDate;
+  final DateTime? endDate;
+
   const UsageHistory({
     required this.date,
     required this.usageLiter,
+    this.week,
+    this.startDate,
+    this.endDate,
   });
 
   String get dayLabel {
