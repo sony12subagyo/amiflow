@@ -27,6 +27,18 @@ class _SchedulePageState extends State<SchedulePage> {
     return int.parse(parts[0]) * 60 + int.parse(parts[1]);
   }
 
+  /// Nama hari (Indonesia) untuk DateTime.weekday 1..7 (Senin..Minggu) --
+  /// disamakan dengan konvensi backend (self::URUTAN_HARI di
+  /// PenjadwalanController/PushJadwalHarian) supaya kartu "HARI INI" di
+  /// Flutter selalu cocok dengan hari yang dipakai backend menentukan
+  /// jadwal mana yang dipush ke device.
+  static const _urutanHari = {
+    1: 'Senin', 2: 'Selasa', 3: 'Rabu', 4: 'Kamis',
+    5: 'Jumat', 6: 'Sabtu', 7: 'Minggu',
+  };
+
+  String get _hariIni => _urutanHari[DateTime.now().weekday] ?? '';
+
   String _durationText(String start, String end) {
     final open = _toMinutes(start);
     final close = _toMinutes(end);
@@ -93,6 +105,10 @@ class _SchedulePageState extends State<SchedulePage> {
     ScheduleDay schedule,
   ) async {
     try {
+      // true  -> jadwal hari ini, sudah LANGSUNG diterapkan ke device
+      // false -> bukan jadwal hari ini, baru tersimpan untuk nanti
+      bool langsungAktif = true;
+
       if (result.applyAllDays) {
         // Kirim SEKALIGUS lewat endpoint batch (1 request), BUKAN loop
         // memanggil saveSchedule() 7 kali seperti sebelumnya. `schedules`
@@ -108,21 +124,32 @@ class _SchedulePageState extends State<SchedulePage> {
           };
         }).toList();
 
-        await _api.saveScheduleBatch(items);
+        final hasil = await _api.saveScheduleBatch(items);
+        // Karena ini batch 7 hari, cukup 1 dari 7 yang benar-benar
+        // "hari ini" -- itulah yang menentukan apakah device langsung
+        // berubah sekarang atau tidak.
+        langsungAktif = hasil.any((item) => item['terkirim_ke_tb'] == true);
       } else {
-        await _api.saveSchedule(
+        final hasil = await _api.saveSchedule(
           nodeId: widget.nodeId,
           hari: schedule.day,
           aktif: schedule.enabled,
           jamBuka: schedule.startTime,
           jamTutup: schedule.endTime,
         );
+        langsungAktif = hasil['terkirim_ke_tb'] == true;
       }
 
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Jadwal tersimpan')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            langsungAktif
+                ? 'Jadwal tersimpan & langsung diterapkan ke alat'
+                : 'Jadwal tersimpan -- akan otomatis aktif saat harinya tiba',
+          ),
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -209,6 +236,7 @@ class _SchedulePageState extends State<SchedulePage> {
                               enabled: schedule.enabled,
                               startTime: schedule.startTime,
                               endTime: schedule.endTime,
+                              isToday: schedule.day == _hariIni,
                               onTap: () async {
                                 final ScheduleResult? result =
                                     await showDialog<ScheduleResult>(

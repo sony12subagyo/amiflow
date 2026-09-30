@@ -29,7 +29,12 @@ class ScheduleApi {
 
   /// Simpan SATU jadwal (satu hari) -- dipakai saat user cuma mengubah
   /// satu kartu hari tanpa mencentang "terapkan ke semua hari".
-  Future<void> saveSchedule({
+  ///
+  /// Return isi response backend (Map) supaya caller bisa tahu apakah
+  /// jadwal ini LANGSUNG diterapkan ke device (`terkirim_ke_tb: true`,
+  /// karena hari yang diedit == hari ini) atau baru tersimpan untuk
+  /// nanti (`terkirim_ke_tb: null` + `catatan` berisi penjelasan).
+  Future<Map<String, dynamic>> saveSchedule({
     required String nodeId,
     required String hari,
     required bool aktif,
@@ -59,6 +64,8 @@ class ScheduleApi {
     if (response.statusCode != 201 && response.statusCode != 200) {
       throw Exception('Gagal menyimpan jadwal (${response.statusCode})');
     }
+
+    return jsonDecode(response.body) as Map<String, dynamic>;
   }
 
   /// Simpan BANYAK jadwal sekaligus dalam SATU request (bukan loop
@@ -67,7 +74,13 @@ class ScheduleApi {
   ///
   /// [items] adalah list objek, masing-masing berisi:
   /// { node_id, hari, aktif, jam_buka, jam_tutup }
-  Future<void> saveScheduleBatch(List<Map<String, dynamic>> items) async {
+  ///
+  /// Return list hasil per-item dari backend (masing-masing punya
+  /// `hari`, `terkirim_ke_tb`, `catatan`) supaya caller bisa tahu
+  /// PERSIS hari mana yang langsung ke-push ke device.
+  Future<List<Map<String, dynamic>>> saveScheduleBatch(
+    List<Map<String, dynamic>> items,
+  ) async {
     final url = Uri.parse('${AppConfig.baseUrl}/penjadwalan/batch');
 
     print('>>> KIRIM BATCH: $items');
@@ -88,5 +101,9 @@ class ScheduleApi {
     if (response.statusCode != 201 && response.statusCode != 200) {
       throw Exception('Gagal menyimpan jadwal batch (${response.statusCode})');
     }
+
+    final decoded = jsonDecode(response.body) as Map<String, dynamic>;
+    final data = decoded['data'] as List<dynamic>? ?? [];
+    return data.cast<Map<String, dynamic>>();
   }
 }

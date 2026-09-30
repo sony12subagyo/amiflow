@@ -25,6 +25,11 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
   late TimeOfDay closeTime;
   bool enabled = false;
 
+  // Sekarang firmware & ThingsBoard SUDAH mendukung jam berbeda per hari,
+  // jadi toggle ini dikembalikan. Default false (hanya ubah hari ini saja)
+  // supaya user tidak tidak sengaja menimpa jadwal hari lain.
+  bool applyAllDays = false;
+
   @override
   void initState() {
     super.initState();
@@ -423,11 +428,31 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
               ],
             ),
 
-            // Catatan: toggle "Terapkan ke semua hari?" SENGAJA dihapus.
-            // Alat cuma menyimpan SATU jadwal yang berlaku untuk semua
-            // hari (bukan per-hari) -- jadi setiap perubahan jam SELALU
-            // otomatis berlaku untuk 7 hari sekaligus, supaya tidak ada
-            // kesan keliru seolah tiap hari bisa berbeda-beda.
+            const SizedBox(height: 18),
+
+            Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    "Terapkan ke semua hari?",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                Switch(
+                  value: applyAllDays,
+                  activeColor: AppColors.accent,
+                  onChanged: (value) {
+                    setState(() {
+                      applyAllDays = value;
+                    });
+                  },
+                ),
+              ],
+            ),
+
             const SizedBox(height: 24),
 
             Row(
@@ -468,8 +493,7 @@ class _ScheduleDialogState extends State<ScheduleDialog> {
                           startTime: _formatTime(openTime),
                           endTime: _formatTime(closeTime),
                           enabled: enabled,
-                          applyAllDays:
-                              true, // selalu true -- lihat catatan di atas
+                          applyAllDays: applyAllDays,
                         );
                         Future.delayed(const Duration(milliseconds: 900), () {
                           if (!mounted) return;

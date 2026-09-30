@@ -8,6 +8,13 @@ class DayScheduleCard extends StatelessWidget {
 
   /// Status apakah schedule diaktifkan
   final bool enabled;
+
+  /// Apakah `day` ini adalah hari berjalan sekarang -- HANYA jadwal hari
+  /// ini yang benar-benar sedang aktif mengontrol device (lihat
+  /// App\Console\Commands\PushJadwalHarian di backend). Hari lain yang
+  /// enabled=true statusnya baru "terjadwal", belum diterapkan ke alat.
+  final bool isToday;
+
   final VoidCallback onTap;
 
   const DayScheduleCard({
@@ -17,6 +24,7 @@ class DayScheduleCard extends StatelessWidget {
     required this.onTap,
     this.startTime,
     this.endTime,
+    this.isToday = false,
   });
 
   @override
@@ -32,10 +40,12 @@ class DayScheduleCard extends StatelessWidget {
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: !enabled
+              color: isToday
+                  ? AppColors.accent
+                  : !enabled
                   ? Colors.white10
                   : AppColors.accent.withOpacity(.7),
-              width: 1.3,
+              width: isToday ? 1.8 : 1.3,
             ),
           ),
           child: Row(
@@ -47,16 +57,42 @@ class DayScheduleCard extends StatelessWidget {
                     Row(
                       children: [
                         Expanded(
-                          child: Text(
-                            day,
-                            style: TextStyle(
-                              color: enabled
-                                  ? AppColors.accent
-                                  : Colors.white70,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 11,
-                              letterSpacing: 1,
-                            ),
+                          child: Row(
+                            children: [
+                              Text(
+                                day,
+                                style: TextStyle(
+                                  color: enabled
+                                      ? AppColors.accent
+                                      : Colors.white70,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 11,
+                                  letterSpacing: 1,
+                                ),
+                              ),
+                              if (isToday) ...[
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 3,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.accent.withOpacity(.18),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: const Text(
+                                    "HARI INI",
+                                    style: TextStyle(
+                                      color: AppColors.accent,
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: .8,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
                         ),
 
@@ -70,9 +106,12 @@ class DayScheduleCard extends StatelessWidget {
                               color: Colors.green.withOpacity(.18),
                               borderRadius: BorderRadius.circular(20),
                             ),
-                            child: const Text(
-                              "Aktif",
-                              style: TextStyle(
+                            child: Text(
+                              // Cuma jadwal hari ini yang benar-benar
+                              // sedang jalan di device; hari lain yang
+                              // enabled cuma "terjadwal" nunggu giliran.
+                              isToday ? "Aktif" : "Terjadwal",
+                              style: const TextStyle(
                                 color: Colors.greenAccent,
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
